@@ -36,6 +36,21 @@ const limiter = rateLimit({
 })
 app.use('/api/', limiter)
 
+// Force UTF-8 Encoding for all responses
+app.use((req, res, next) => {
+  res.setHeader('charset', 'utf-8');
+  // Ensure content type has charset set for JSON/text responses
+  const oldWriteHead = res.writeHead;
+  res.writeHead = function (statusCode, statusMessage, headers) {
+    let contentType = res.getHeader('content-type');
+    if (contentType && (contentType.includes('application/json') || contentType.includes('text/')) && !contentType.includes('charset')) {
+      res.setHeader('content-type', `${contentType}; charset=utf-8`);
+    }
+    return oldWriteHead.apply(this, arguments);
+  };
+  next();
+});
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))

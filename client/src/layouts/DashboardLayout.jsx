@@ -2,9 +2,16 @@ import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import Topbar from '../components/Topbar'
+import { useAuthStore } from '../store/authStore'
+import SuperAdminLayout from './SuperAdminLayout'
 
 export default function DashboardLayout() {
+  const { user } = useAuthStore()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  if (user?.role === 'superadmin') {
+    return <SuperAdminLayout />
+  }
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#F8FAFC' }}>

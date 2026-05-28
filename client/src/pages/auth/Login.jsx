@@ -32,7 +32,7 @@ export default function Login() {
     const credentials = {
       admin: { email: 'admin@agroerp.com', password: 'admin123' },
       user: { email: 'staff@agroerp.com', password: 'staff123' },
-      superadmin: { email: 'super@agroerp.com', password: 'super123' },
+      superadmin: { email: 'super@agroerp.com', password: '123456' },
     }
     setLoading(true)
     try {

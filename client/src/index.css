@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Force class-based dark mode — dark: variants only fire when .dark is on <html> */
+@variant dark (&:is(.dark *));
+
 @theme {
   --color-primary-50: #f0fdf4;
   --color-primary-100: #dcfce7;
@@ -21,6 +24,13 @@
 
   --font-heading: "Poppins", sans-serif;
   --font-body: "Inter", sans-serif;
+
+  /* Extended slate palette for Super Admin ERP */
+  --color-slate-850: #172033;
+  --color-slate-750: #1e2d45;
+  --color-slate-550: #64748b;
+  --color-slate-450: #7a8a99;
+  --color-slate-5: #fafbfc;
 }
 
 @layer base {
@@ -46,6 +56,18 @@
 }
 
 @layer utilities {
+  /* ─── Custom text-size utilities used throughout Super Admin ERP ─── */
+  .text-5xs { font-size: 0.55rem; line-height: 0.75rem; }
+  .text-4xs  { font-size: 0.625rem; line-height: 0.875rem; }
+  .text-3xs  { font-size: 0.7rem;  line-height: 1rem; }
+  .text-2xs  { font-size: 0.75rem; line-height: 1.1rem; }
+
+  /* ─── slate-950 explicit bg (not always in Tailwind v3 palette) ─── */
+  .bg-slate-950 { background-color: #020617; }
+  .dark\:bg-slate-950:is(.dark *) { background-color: #020617; }
+  .border-slate-850 { border-color: #172033; }
+  .dark\:border-slate-850:is(.dark *) { border-color: #172033; }
+
   .glass {
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(12px);
@@ -260,47 +282,5 @@
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
-  }
-
-  /* ERP Sidebar & Glassmorphism styles */
-  .erp-glass-light {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(226, 232, 240, 0.8);
-  }
-
-  .erp-glass-dark {
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-right: 1px solid rgba(51, 65, 85, 0.4);
-  }
-
-  .erp-menu-item-active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white !important;
-    box-shadow: 0 4px 12px 0 rgba(16, 185, 129, 0.3);
-  }
-
-  .erp-submenu-item-active {
-    color: #10b981 !important;
-    font-weight: 600;
-  }
-
-  /* Custom styling for modern enterprise look */
-  .erp-scroll::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .erp-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .erp-scroll::-webkit-scrollbar-thumb {
-    background: rgba(156, 163, 175, 0.25);
-    border-radius: 999px;
-  }
-  .erp-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(156, 163, 175, 0.45);
   }
 }

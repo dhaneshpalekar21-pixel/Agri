@@ -192,6 +192,104 @@ export default function Landing() {
   // Testimonials Carousel state
   const [testimonialIndex, setTestimonialIndex] = useState(0);
 
+  // Live Dashboard Simulation States for premium landing experience
+  const [dashboardData, setDashboardData] = useState({
+    revenue: 14845,
+    activeFields: 18,
+    cropHealth: 84,
+    yieldData: [40, 50, 45, 65, 75, 90],
+    recentActivities: [
+      { id: 1, type: "Irrigation completed", field: "Field A1", time: "2h ago" },
+      { id: 2, type: "Fertilizer applied", field: "Field B3", time: "5h ago" }
+    ],
+    fields: [
+      { id: "Field A1", crop: "Corn", status: "Healthy", statusClass: "bg-[#A7C957]/20 text-[#A7C957]" },
+      { id: "Field B2", crop: "Wheat", status: "Moderate", statusClass: "bg-amber-500/20 text-amber-400" },
+      { id: "Field C3", crop: "Soybean", status: "Alert", statusClass: "bg-rose-500/20 text-rose-400" }
+    ]
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDashboardData(prev => {
+        // Increment revenue slowly with occasional fluctuations
+        const nextRevenue = prev.revenue + Math.floor(Math.random() * 25) - 5;
+        
+        // Active fields can fluctuate slightly
+        let nextFieldsCount = prev.activeFields;
+        if (Math.random() < 0.2) {
+          nextFieldsCount = Math.max(15, Math.min(20, prev.activeFields + (Math.random() > 0.5 ? 1 : -1)));
+        }
+
+        // Crop health fluctuates organically between 80% and 95%
+        let nextHealth = prev.cropHealth + (Math.random() > 0.5 ? 1 : -1);
+        if (nextHealth > 95) nextHealth = 95;
+        if (nextHealth < 80) nextHealth = 80;
+
+        // Shift yield chart values slightly
+        const nextYield = prev.yieldData.map(h => {
+          let change = Math.floor(Math.random() * 11) - 5; // -5 to +5
+          let newH = h + change;
+          if (newH > 95) newH = 95;
+          if (newH < 20) newH = 20;
+          return newH;
+        });
+
+        // Rotate recent activities
+        let nextActivities = [...prev.recentActivities];
+        if (Math.random() < 0.4) {
+          const activityPool = [
+            { type: "Irrigation completed", field: "Field A1", time: "Just now" },
+            { type: "Fertilizer applied", field: "Field B3", time: "1m ago" },
+            { type: "Harvesting started", field: "Field C2", time: "Just now" },
+            { type: "Pest warning cleared", field: "Field A2", time: "3m ago" },
+            { type: "Soil probe synced", field: "Field B1", time: "Just now" },
+            { type: "Sensor calibration", field: "Field C3", time: "4m ago" }
+          ];
+          const newAct = activityPool[Math.floor(Math.random() * activityPool.length)];
+          if (newAct.type !== prev.recentActivities[0].type) {
+            nextActivities = [
+              { id: Date.now(), ...newAct },
+              { ...prev.recentActivities[0], time: "2h ago" }
+            ].slice(0, 2);
+          }
+        }
+
+        // Rotate field status states slightly
+        const statuses = ["Healthy", "Moderate", "Alert"];
+        const statusClasses = {
+          Healthy: "bg-[#A7C957]/20 text-[#A7C957]",
+          Moderate: "bg-amber-500/20 text-amber-400",
+          Alert: "bg-rose-500/20 text-rose-400"
+        };
+        const nextFieldsStatus = prev.fields.map(f => {
+          if (Math.random() < 0.2) {
+            const currentIdx = statuses.indexOf(f.status);
+            const nextIdx = (currentIdx + (Math.random() > 0.5 ? 1 : 2)) % 3;
+            const newStatus = statuses[nextIdx];
+            return {
+              ...f,
+              status: newStatus,
+              statusClass: statusClasses[newStatus]
+            };
+          }
+          return f;
+        });
+
+        return {
+          revenue: nextRevenue,
+          activeFields: nextFieldsCount,
+          cropHealth: nextHealth,
+          yieldData: nextYield,
+          recentActivities: nextActivities,
+          fields: nextFieldsStatus
+        };
+      });
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
+
   // Initialize Lenis Smooth Scrolling
   useEffect(() => {
     const lenis = new Lenis({
@@ -345,12 +443,12 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F5EF] text-[#1B1B1B] font-sans selection:bg-[#5D7C3F] selection:text-white relative overflow-x-clip">
+    <div className="min-h-screen bg-[#F9FBF8] text-[#1B1B1B] font-sans selection:bg-[#6DBE45] selection:text-white relative overflow-x-clip">
       
       {/* Background Floating Blurred Gradient Orbs */}
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#A7C957]/10 blur-[120px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '8s' }} />
-      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#5D7C3F]/5 blur-[150px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '12s' }} />
-      <div className="absolute bottom-[15%] left-[5%] w-[450px] h-[450px] rounded-full bg-[#314B2C]/5 blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '10s' }} />
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#6DBE45]/10 blur-[120px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#A8E6A1]/10 blur-[150px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '12s' }} />
+      <div className="absolute bottom-[15%] left-[5%] w-[450px] h-[450px] rounded-full bg-[#6DBE45]/5 blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '10s' }} />
 
       {/* Floating Global Leaf & Sprout Objects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-30">
@@ -362,7 +460,7 @@ export default function Landing() {
             x: [0, 10, 0]
           }}
           transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-          className="absolute top-[12%] left-[8%] text-[#314B2C]/15 w-9 h-9"
+          className="absolute top-[12%] left-[8%] text-[#6DBE45]/15 w-9 h-9"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -374,7 +472,7 @@ export default function Landing() {
             x: [0, -15, 0]
           }}
           transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-          className="absolute top-[28%] right-[10%] text-[#5D7C3F]/10 w-11 h-11"
+          className="absolute top-[28%] right-[10%] text-[#A8E6A1]/15 w-11 h-11"
         >
           <Leaf className="w-full h-full transform -rotate-45" />
         </motion.div>
@@ -386,7 +484,7 @@ export default function Landing() {
             x: [0, 12, 0]
           }}
           transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }}
-          className="absolute top-[55%] left-[5%] text-[#A7C957]/15 w-8 h-8"
+          className="absolute top-[55%] left-[5%] text-[#6DBE45]/15 w-8 h-8"
         >
           <Sprout className="w-full h-full" />
         </motion.div>
@@ -398,7 +496,7 @@ export default function Landing() {
             x: [0, -8, 0]
           }}
           transition={{ repeat: Infinity, duration: 11, ease: "easeInOut" }}
-          className="absolute top-[72%] right-[8%] text-[#314B2C]/10 w-10 h-10"
+          className="absolute top-[72%] right-[8%] text-[#6DBE45]/15 w-10 h-10"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -410,7 +508,7 @@ export default function Landing() {
             x: [0, 10, 0]
           }}
           transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
-          className="absolute top-[88%] left-[12%] text-[#5D7C3F]/15 w-9 h-9"
+          className="absolute top-[88%] left-[12%] text-[#A8E6A1]/15 w-9 h-9"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -418,53 +516,53 @@ export default function Landing() {
 
       {/* 1. Fixed Glassmorphic Navbar inside wrapper */}
       <div className="h-20 z-50 relative">
-        <header className={`fixed top-0 left-0 right-0 h-20 z-50 transition-all duration-300 transform ${navbarVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-[#F7F5EF]/85 backdrop-blur-lg border-b border-[#EAE4D5] shadow-[0_2px_20px_rgba(0,0,0,0.02)]' : 'bg-transparent'}`}>
+        <header className={`fixed top-0 left-0 right-0 h-20 z-50 transition-all duration-300 transform ${navbarVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-white/80 backdrop-blur-lg border-b border-[#CFF5C8]/60 shadow-[0_4px_30px_rgba(109,190,69,0.03)]' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 bg-[#314B2C] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#314B2C]/20">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#6DBE45]/20">
               <Leaf className="w-5.5 h-5.5" />
             </div>
-            <span className="text-2xl font-black text-[#1B1B1B] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <span className="text-2xl font-black text-[#1E3A1A] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               AgriAI
             </span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#6B7280]">
-            <a href="#home" className={`hover:text-[#314B2C] transition-colors py-1 relative ${activeSection === 'home' ? 'text-[#314B2C]' : ''}`}>
+            <a href="#home" className={`hover:text-[#6DBE45] transition-colors py-1 relative ${activeSection === 'home' ? 'text-[#6DBE45]' : ''}`}>
               Home
-              {activeSection === 'home' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#314B2C] rounded-full" />}
+              {activeSection === 'home' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6DBE45] rounded-full" />}
             </a>
-            <a href="#features" className={`hover:text-[#314B2C] transition-colors py-1 relative ${activeSection === 'features' ? 'text-[#314B2C]' : ''}`}>
+            <a href="#features" className={`hover:text-[#6DBE45] transition-colors py-1 relative ${activeSection === 'features' ? 'text-[#6DBE45]' : ''}`}>
               Features
-              {activeSection === 'features' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#314B2C] rounded-full" />}
+              {activeSection === 'features' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6DBE45] rounded-full" />}
             </a>
-            <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#314B2C] transition-colors py-1">
+            <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#6DBE45] transition-colors py-1">
               <span>Solutions</span>
-              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-[#314B2C]" />
+              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-[#6DBE45]" />
             </div>
-            <a href="#how-it-works" className={`hover:text-[#314B2C] transition-colors py-1 relative ${activeSection === 'how-it-works' ? 'text-[#314B2C]' : ''}`}>
+            <a href="#how-it-works" className={`hover:text-[#6DBE45] transition-colors py-1 relative ${activeSection === 'how-it-works' ? 'text-[#6DBE45]' : ''}`}>
               How It Works
-              {activeSection === 'how-it-works' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#314B2C] rounded-full" />}
+              {activeSection === 'how-it-works' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6DBE45] rounded-full" />}
             </a>
-            <a href="#pricing" className={`hover:text-[#314B2C] transition-colors py-1 relative ${activeSection === 'pricing' ? 'text-[#314B2C]' : ''}`}>
+            <a href="#pricing" className={`hover:text-[#6DBE45] transition-colors py-1 relative ${activeSection === 'pricing' ? 'text-[#6DBE45]' : ''}`}>
               Pricing
-              {activeSection === 'pricing' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#314B2C] rounded-full" />}
+              {activeSection === 'pricing' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6DBE45] rounded-full" />}
             </a>
-            <a href="#about" className={`hover:text-[#314B2C] transition-colors py-1 relative ${activeSection === 'about' ? 'text-[#314B2C]' : ''}`}>
+            <a href="#about" className={`hover:text-[#6DBE45] transition-colors py-1 relative ${activeSection === 'about' ? 'text-[#6DBE45]' : ''}`}>
               About Us
-              {activeSection === 'about' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#314B2C] rounded-full" />}
+              {activeSection === 'about' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6DBE45] rounded-full" />}
             </a>
           </nav>
 
           {/* Actions */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link to="/login" className="text-sm font-black text-[#6B7280] hover:text-[#314B2C] transition-colors">
+            <Link to="/login" className="text-sm font-black text-[#6B7280] hover:text-[#6DBE45] transition-colors">
               Log In
             </Link>
             <Link 
               to="/login"
-              className="flex items-center gap-2 bg-[#314B2C] hover:bg-[#5D7C3F] text-white px-5.5 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#314B2C]/10 transition-all hover:scale-[1.02] cursor-pointer"
+              className="flex items-center gap-2 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] hover:from-[#5da539] hover:to-[#92d08a] text-white px-5.5 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#6DBE45]/10 transition-all hover:scale-[1.02] cursor-pointer"
             >
               <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
@@ -474,7 +572,7 @@ export default function Landing() {
           {/* Mobile menu trigger */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            className="lg:hidden p-2 text-[#6B7280] hover:text-[#1B1B1B] transition-colors"
+            className="lg:hidden p-2 text-[#6B7280] hover:text-[#1E3A1A] transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -487,19 +585,19 @@ export default function Landing() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-[#F7F5EF]/95 backdrop-blur-md border-b border-[#EAE4D5] overflow-hidden"
+              className="lg:hidden bg-white/95 backdrop-blur-md border-b border-[#CFF5C8] overflow-hidden"
             >
               <div className="px-6 py-6 flex flex-col gap-4 text-base font-bold text-[#1B1B1B]">
-                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#314B2C]">Features</a>
-                <span className="hover:text-[#314B2C] cursor-pointer">Solutions</span>
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#314B2C]">How It Works</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#314B2C]">Pricing</a>
-                <span className="hover:text-[#314B2C] cursor-pointer">About Us</span>
-                <div className="h-px bg-[#EAE4D5] my-2" />
-                <Link to="/login" className="hover:text-[#314B2C]">Log In</Link>
+                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#6DBE45]">Features</a>
+                <span className="hover:text-[#6DBE45] cursor-pointer">Solutions</span>
+                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#6DBE45]">How It Works</a>
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#6DBE45]">Pricing</a>
+                <span className="hover:text-[#6DBE45] cursor-pointer">About Us</span>
+                <div className="h-px bg-[#CFF5C8] my-2" />
+                <Link to="/login" className="hover:text-[#6DBE45]">Log In</Link>
                 <Link 
                   to="/login"
-                  className="flex items-center justify-center gap-2 bg-[#314B2C] hover:bg-[#5D7C3F] text-white py-3.5 rounded-xl font-bold transition-all text-center shadow-lg shadow-[#314B2C]/10"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] text-white py-3.5 rounded-xl font-bold transition-all text-center shadow-lg shadow-[#6DBE45]/10"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-4 h-4" />
@@ -512,7 +610,7 @@ export default function Landing() {
       </div>
 
       {/* 2. Hero Section with Terraced Fields Background */}
-      <section id="home" className="relative overflow-hidden pt-20 lg:pt-32 pb-32 bg-[#F7F5EF] z-10">
+      <section id="home" className="relative overflow-hidden pt-20 lg:pt-32 pb-32 bg-[#F9FBF8] z-10">
         
         {/* Full-width landscape field background - blended with low opacity for organic SaaS depth */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -533,7 +631,7 @@ export default function Landing() {
             }}
           />
           {/* Blend layout gradient to the cream page body */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F5EF]/10 via-[#F7F5EF]/60 to-[#F7F5EF]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F9FBF8]/10 via-[#F9FBF8]/60 to-[#F9FBF8]" />
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-20">
@@ -542,20 +640,20 @@ export default function Landing() {
             {/* Left Content Column with premium organic glassmorphic panel */}
             <motion.div 
               {...fadeInScroll}
-              className="lg:col-span-6 flex flex-col items-start bg-white/40 backdrop-blur-md border border-[#EAE4D5] p-8 sm:p-10 rounded-[32px] shadow-2xl relative overflow-hidden"
+              className="lg:col-span-6 flex flex-col items-start bg-white/70 backdrop-blur-md border border-[#CFF5C8] p-8 sm:p-10 rounded-[32px] shadow-2xl relative overflow-hidden"
             >
               {/* Premium background animated glow inside the card */}
-              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#A7C957]/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#6DBE45]/10 rounded-full blur-3xl animate-pulse pointer-events-none" />
 
-              <div className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm border border-[#314B2C]/20 relative z-10">
-                <Sparkles className="w-3.5 h-3.5 text-[#314B2C] animate-spin" style={{ animationDuration: '3s' }} />
+              <div className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#1E3A1A] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm border border-[#A8E6A1]/40 relative z-10">
+                <Sparkles className="w-3.5 h-3.5 text-[#6DBE45] animate-spin" style={{ animationDuration: '3s' }} />
                 <span>AI-Powered Agriculture</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl xl:text-6.5xl font-black text-[#1B1B1B] tracking-tight leading-[1.08] mb-6 relative z-10" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Smart Agriculture <br />
                 Management <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#314B2C] to-[#5D7C3F] filter drop-shadow-sm">Powered by AI</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1E3A1A] to-[#6DBE45] filter drop-shadow-sm">Powered by AI</span>
               </h1>
               
               <p className="text-base sm:text-lg text-[#6B7280] font-semibold leading-relaxed max-w-xl mb-8 relative z-10">
@@ -566,39 +664,39 @@ export default function Landing() {
               <div className="flex flex-wrap gap-4 w-full sm:w-auto mb-8 relative z-10">
                 <Link 
                   to="/login"
-                  className="flex-grow sm:flex-grow-0 bg-[#314B2C] hover:bg-[#5D7C3F] text-white px-8 py-4.5 rounded-xl font-bold text-center shadow-lg shadow-[#314B2C]/10 hover:scale-[1.03] transition-all cursor-pointer"
+                  className="flex-grow sm:flex-grow-0 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] hover:from-[#5da539] hover:to-[#92d08a] text-white px-8 py-4.5 rounded-xl font-bold text-center shadow-lg shadow-[#6DBE45]/15 hover:scale-[1.03] transition-all cursor-pointer"
                 >
                   Start Free Trial
                 </Link>
                 <button 
                   onClick={() => navigate('/login')}
-                  className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2.5 bg-white/60 backdrop-blur-sm border border-[#EAE4D5] text-[#1B1B1B] px-8 py-4.5 rounded-xl font-bold hover:bg-white/90 hover:scale-[1.03] transition-all shadow-sm cursor-pointer"
+                  className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2.5 bg-white/70 backdrop-blur-sm border border-[#CFF5C8] text-[#1E3A1A] px-8 py-4.5 rounded-xl font-bold hover:bg-white hover:scale-[1.03] transition-all shadow-sm cursor-pointer"
                 >
-                  <Play className="w-4.5 h-4.5 text-[#314B2C] fill-[#314B2C]" />
+                  <Play className="w-4.5 h-4.5 text-[#6DBE45] fill-[#6DBE45]" />
                   <span>Watch Demo</span>
                 </button>
               </div>
 
               {/* Sub features indicators list */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-black text-[#6B7280] uppercase tracking-wide border-t border-[#EAE4D5] pt-6 w-full relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-black text-[#6B7280] uppercase tracking-wide border-t border-[#CFF5C8] pt-6 w-full relative z-10">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#314B2C]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#6DBE45]" />
                   <div>
-                    <p className="font-black text-[#1B1B1B]">14-Day Free Trial</p>
+                    <p className="font-black text-[#1E3A1A]">14-Day Free Trial</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">No credit card</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#314B2C]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#6DBE45]" />
                   <div>
-                    <p className="font-black text-[#1B1B1B]">Cancel Anytime</p>
+                    <p className="font-black text-[#1E3A1A]">Cancel Anytime</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">No hassle</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#314B2C]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#6DBE45]" />
                   <div>
-                    <p className="font-black text-[#1B1B1B]">Secure Data</p>
+                    <p className="font-black text-[#1E3A1A]">Secure Data</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">Your data is safe</p>
                   </div>
                 </div>
@@ -607,9 +705,9 @@ export default function Landing() {
               {/* Farmer Social Proof */}
               <div className="mt-8 flex items-center gap-3 relative z-10">
                 <div className="flex -space-x-2">
-                  <img className="w-9 h-9 rounded-full border-2 border-[#F7F5EF] object-cover shadow-sm" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=60" alt="" />
-                  <img className="w-9 h-9 rounded-full border-2 border-[#F7F5EF] object-cover shadow-sm" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=60" alt="" />
-                  <img className="w-9 h-9 rounded-full border-2 border-[#F7F5EF] object-cover shadow-sm" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=60" alt="" />
+                  <img className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=60" alt="" />
+                  <img className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=60" alt="" />
+                  <img className="w-9 h-9 rounded-full border-2 border-white object-cover shadow-sm" src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=60" alt="" />
                 </div>
                 <div className="text-[11px] font-bold text-[#6B7280]">
                   <p className="font-black text-[#1B1B1B]">Trusted by 10,000+ farmers</p>
@@ -634,112 +732,120 @@ export default function Landing() {
               <motion.div 
                 animate={{ y: [0, -10, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -top-6 -left-6 z-25 bg-white/60 backdrop-blur-md p-3.5 rounded-2xl border border-[#EAE4D5] shadow-[0_10px_30px_rgba(0,0,0,0.06)] flex items-center gap-3"
+                className="absolute -top-6 -left-6 z-25 bg-white border border-[#CFF5C8] p-3.5 rounded-2xl shadow-[0_10px_30px_rgba(109,190,69,0.06)] flex items-center gap-3"
               >
-                <div className="w-9 h-9 rounded-xl bg-[#314B2C]/10 flex items-center justify-center text-[#314B2C]">
+                <div className="w-9 h-9 rounded-xl bg-[#EAFBE7] flex items-center justify-center text-[#6DBE45]">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-[9px] uppercase font-black text-[#6B7280]">AI Yield Forecast</p>
-                  <p className="text-xs font-black text-[#1B1B1B]">+28% efficiency boost</p>
+                  <p className="text-xs font-black text-[#1E3A1A]">+28% efficiency boost</p>
                 </div>
               </motion.div>
               {/* Floating Widget 2 */}
               <motion.div 
                 animate={{ y: [0, 8, 0] }}
                 transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                className="absolute -bottom-6 -right-4 z-25 bg-[#314B2C] backdrop-blur-md p-4 rounded-2xl border border-[#5D7C3F]/20 shadow-[0_10px_35px_rgba(0,0,0,0.15)] flex items-center gap-3.5 text-white"
+                className="absolute -bottom-6 -right-4 z-25 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] p-4 rounded-2xl border border-[#CFF5C8]/20 shadow-[0_10px_35px_rgba(109,190,69,0.15)] flex items-center gap-3.5 text-white"
               >
-                <div className="w-10 h-10 rounded-xl bg-[#A7C957]/20 flex items-center justify-center text-[#A7C957]">
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
                   <Activity className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[9px] uppercase font-black text-[#A7C957]">Weather Alert</p>
-                  <p className="text-xs font-bold">Optimal watering window</p>
+                  <p className="text-[9px] uppercase font-black text-white/80">Weather Alert</p>
+                  <p className="text-xs font-bold text-white">Optimal watering window</p>
                 </div>
               </motion.div>
 
               {/* Premium Dashboard UI Mockup */}
-              <div className="w-full max-w-xl mx-auto bg-[#314B2C] rounded-[24px] shadow-2xl border border-[#5D7C3F]/20 backdrop-blur-sm overflow-hidden hover:shadow-[#A7C957]/5 hover:border-[#5D7C3F]/40 transition-all duration-500">
-                <div className="h-10 bg-[#243720] px-4 flex items-center justify-between border-b border-[#5D7C3F]/20">
+              <div className="w-full max-w-xl mx-auto bg-white/80 rounded-[24px] shadow-2xl border border-[#CFF5C8] backdrop-blur-sm overflow-hidden hover:shadow-[#6DBE45]/5 hover:border-[#6DBE45]/40 transition-all duration-500">
+                <div className="h-10 bg-[#EAFBE7] px-4 flex items-center justify-between border-b border-[#CFF5C8]">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#EAE4D5]/30" />
-                    <div className="w-3 h-3 rounded-full bg-[#EAE4D5]/30" />
-                    <div className="w-3 h-3 rounded-full bg-[#EAE4D5]/30" />
+                    <div className="w-3 h-3 rounded-full bg-[#1E3A1A]/20" />
+                    <div className="w-3 h-3 rounded-full bg-[#1E3A1A]/20" />
+                    <div className="w-3 h-3 rounded-full bg-[#1E3A1A]/20" />
                   </div>
-                  <span className="text-xs text-[#EAE4D5]/50 font-bold">dashboard.agriai.com</span>
+                  <span className="text-xs text-[#1E3A1A]/50 font-bold">dashboard.agriai.com</span>
                   <div className="w-4" />
                 </div>
-                <div className="p-6 bg-[#1B2A18] text-[#EAE4D5]">
+                <div className="p-6 bg-white text-[#4A5568]">
                   
                   {/* Dashboard Header */}
                   <div className="flex justify-between items-center mb-6">
                     <div>
-                      <h3 className="text-lg font-bold text-white">Dashboard</h3>
-                      <p className="text-xs text-[#EAE4D5]/60">Overview of your farm operations.</p>
+                      <h3 className="text-lg font-bold text-[#1E3A1A]">Dashboard</h3>
+                      <p className="text-xs text-[#6B7280]">Overview of your farm operations.</p>
                     </div>
                     <div className="flex gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#243720] flex items-center justify-center text-xs">🔍</div>
-                      <div className="w-8 h-8 rounded-full bg-[#243720] flex items-center justify-center text-xs">🔔</div>
+                      <div className="w-8 h-8 rounded-full bg-[#EAFBE7] flex items-center justify-center text-xs text-[#1E3A1A] cursor-pointer">🔍</div>
+                      <div className="w-8 h-8 rounded-full bg-[#EAFBE7] flex items-center justify-center text-xs text-[#1E3A1A] cursor-pointer">🔔</div>
                     </div>
                   </div>
 
                   {/* Cards Row */}
                   <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-[#243720] p-3.5 rounded-xl border border-[#314B2C] hover:border-[#5D7C3F]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#EAE4D5]/60">Total Revenue</p>
-                      <h4 className="text-base font-black text-white mt-1">$14,845</h4>
-                      <span className="text-[9px] text-[#A7C957] font-semibold">+12.5%</span>
+                    <div className="bg-[#EAFBE7]/60 p-3.5 rounded-xl border border-[#CFF5C8]/50 hover:border-[#6DBE45]/30 transition-colors">
+                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Total Revenue</p>
+                      <h4 className="text-base font-black text-[#1E3A1A] mt-1">
+                        ${dashboardData.revenue.toLocaleString()}
+                      </h4>
+                      <span className="text-[9px] text-[#6DBE45] font-semibold transition-opacity duration-300">
+                        +{((dashboardData.revenue - 13195) / 13195 * 100).toFixed(1)}%
+                      </span>
                     </div>
-                    <div className="bg-[#243720] p-3.5 rounded-xl border border-[#314B2C] hover:border-[#5D7C3F]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#EAE4D5]/60">Active Fields</p>
-                      <h4 className="text-base font-black text-white mt-1">18/20</h4>
-                      <span className="text-[9px] text-[#EAE4D5]/65 font-semibold">2 more</span>
+                    <div className="bg-[#EAFBE7]/60 p-3.5 rounded-xl border border-[#CFF5C8]/50 hover:border-[#6DBE45]/30 transition-colors">
+                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Active Fields</p>
+                      <h4 className="text-base font-black text-[#1E3A1A] mt-1">
+                        {dashboardData.activeFields}/20
+                      </h4>
+                      <span className="text-[9px] text-[#6B7280]/80 font-semibold">
+                        {20 - dashboardData.activeFields} left
+                      </span>
                     </div>
-                    <div className="bg-[#243720] p-3.5 rounded-xl border border-[#314B2C] hover:border-[#5D7C3F]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#EAE4D5]/60">Crop Health</p>
-                      <h4 className="text-base font-black text-white mt-1">84%</h4>
-                      <span className="text-[9px] text-[#A7C957] font-semibold">Good</span>
+                    <div className="bg-[#EAFBE7]/60 p-3.5 rounded-xl border border-[#CFF5C8]/50 hover:border-[#6DBE45]/30 transition-colors">
+                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Crop Health</p>
+                      <h4 className="text-base font-black text-[#1E3A1A] mt-1">
+                        {dashboardData.cropHealth}%
+                      </h4>
+                      <span className={`text-[9px] font-semibold transition-colors duration-300 ${
+                        dashboardData.cropHealth >= 88 ? 'text-[#6DBE45]' : 'text-amber-500'
+                      }`}>
+                        {dashboardData.cropHealth >= 88 ? 'Excellent' : 'Good'}
+                      </span>
                     </div>
                   </div>
 
                   {/* Chart and Activity */}
                   <div className="grid grid-cols-5 gap-3">
-                    <div className="col-span-3 bg-[#243720] p-4 rounded-xl border border-[#314B2C]">
-                      <p className="text-[10px] uppercase font-bold text-[#EAE4D5]/60 mb-2">Yield Prediction</p>
+                    <div className="col-span-3 bg-[#EAFBE7]/60 p-4 rounded-xl border border-[#CFF5C8]/50">
+                      <p className="text-[10px] uppercase font-bold text-[#6B7280] mb-2">Yield Prediction</p>
                       <div className="h-28 flex items-end justify-between gap-1 pt-2">
-                        {[40, 50, 45, 65, 75, 90].map((h, i) => (
+                        {dashboardData.yieldData.map((h, i) => (
                           <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
                             <motion.div 
-                              initial={{ height: 0 }}
-                              whileInView={{ height: `${h}%` }}
-                              transition={{ duration: 1, delay: i * 0.1 }}
-                              className="w-full bg-[#A7C957] rounded-t shadow-[0_0_10px_rgba(167,201,87,0.3)]" 
+                              animate={{ height: `${h}%` }}
+                              transition={{ type: "spring", stiffness: 60, damping: 15 }}
+                              className="w-full bg-[#6DBE45] rounded-t shadow-[0_0_10px_rgba(109,190,69,0.15)]" 
                             />
-                            <span className="text-[8px] text-[#EAE4D5]/50">M{i+1}</span>
+                            <span className="text-[8px] text-[#6B7280]/50">M{i+1}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                     
-                    <div className="col-span-2 bg-[#243720] p-4 rounded-xl border border-[#314B2C] flex flex-col justify-between">
+                    <div className="col-span-2 bg-[#EAFBE7]/60 p-4 rounded-xl border border-[#CFF5C8]/50 flex flex-col justify-between">
                       <div>
-                        <p className="text-[10px] uppercase font-bold text-[#EAE4D5]/60 mb-3">Recent Activities</p>
+                        <p className="text-[10px] uppercase font-bold text-[#6B7280] mb-3">Recent Activities</p>
                         <div className="space-y-3 text-[10px]">
-                          <div className="flex gap-2">
-                            <span className="text-[#A7C957] animate-ping h-2 w-2 mt-1">●</span>
-                            <div>
-                              <p className="font-bold text-white">Irrigation completed</p>
-                              <p className="text-[#EAE4D5]/50">Field A1 • 2h ago</p>
+                          {dashboardData.recentActivities.map((act) => (
+                            <div key={act.id} className="flex gap-2 transition-all duration-500 ease-in-out">
+                              <span className="text-[#6DBE45] animate-ping h-2 w-2 mt-1">●</span>
+                              <div>
+                                <p className="font-bold text-[#1E3A1A] leading-tight">{act.type}</p>
+                                <p className="text-[#6B7280]">{act.field} • {act.time}</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex gap-2">
-                            <span className="text-[#A7C957] animate-ping h-2 w-2 mt-1">●</span>
-                            <div>
-                              <p className="font-bold text-white">Fertilizer applied</p>
-                              <p className="text-[#EAE4D5]/50">Field B3 • 5h ago</p>
-                            </div>
-                          </div>
+                          ))}
                         </div>
                       </div>
                     </div>
@@ -747,27 +853,21 @@ export default function Landing() {
 
                   {/* Field Status cards */}
                   <div className="mt-4 grid grid-cols-3 gap-3 text-[10px]">
-                    <div className="bg-[#243720] p-2.5 rounded-lg border border-[#314B2C] flex justify-between items-center">
-                      <div>
-                        <p className="font-black text-white">Field A1</p>
-                        <p className="text-[#EAE4D5]/60">Corn</p>
+                    {dashboardData.fields.map((f) => (
+                      <div key={f.id} className="bg-[#EAFBE7]/60 p-2.5 rounded-lg border border-[#CFF5C8]/50 flex justify-between items-center transition-colors duration-500">
+                        <div>
+                          <p className="font-black text-[#1E3A1A]">{f.id}</p>
+                          <p className="text-[#6B7280]">{f.crop}</p>
+                        </div>
+                        <span className={`${
+                          f.status === 'Healthy' ? 'bg-[#6DBE45]/20 text-[#1E3A1A]' :
+                          f.status === 'Moderate' ? 'bg-amber-500/20 text-amber-600' :
+                          'bg-rose-500/20 text-rose-600'
+                        } px-1.5 py-0.5 rounded font-bold transition-all duration-500`}>
+                          {f.status}
+                        </span>
                       </div>
-                      <span className="bg-[#A7C957]/20 text-[#A7C957] px-1.5 py-0.5 rounded font-bold">Healthy</span>
-                    </div>
-                    <div className="bg-[#243720] p-2.5 rounded-lg border border-[#314B2C] flex justify-between items-center">
-                      <div>
-                        <p className="font-black text-white">Field B2</p>
-                        <p className="text-[#EAE4D5]/60">Wheat</p>
-                      </div>
-                      <span className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded font-bold">Moderate</span>
-                    </div>
-                    <div className="bg-[#243720] p-2.5 rounded-lg border border-[#314B2C] flex justify-between items-center">
-                      <div>
-                        <p className="font-black text-white">Field C3</p>
-                        <p className="text-[#EAE4D5]/60">Soybean</p>
-                      </div>
-                      <span className="bg-rose-500/20 text-rose-450 text-rose-450 px-1.5 py-0.5 rounded font-bold">Alert</span>
-                    </div>
+                    ))}
                   </div>
 
                 </div>
@@ -782,19 +882,19 @@ export default function Landing() {
       <section 
         ref={farmingShowcaseRef} 
         id="farming-showcase" 
-        className="relative z-10 bg-gradient-to-b from-[#131d11] to-[#1E331A] text-white"
+        className="relative z-10 bg-gradient-to-b from-white via-[#EAFBE7] to-white text-[#1B1B1B]"
         style={{ height: isMobile ? 'auto' : '300vh' }}
       >
         {isMobile ? (
           <div className="py-24 px-6 max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <span className="bg-[#A7C957]/10 text-[#A7C957] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase border border-[#A7C957]/20">
+              <span className="bg-[#6DBE45]/10 text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase border border-[#6DBE45]/20">
                 SMART AGRICULTURE
               </span>
-              <h2 className="text-3xl font-black text-white mt-4 tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl font-black text-[#1E3A1A] mt-4 tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Experience the Future of Modern Farming
               </h2>
-              <p className="text-slate-300 font-semibold text-sm mt-3 max-w-xl mx-auto">
+              <p className="text-slate-500 font-semibold text-sm mt-3 max-w-xl mx-auto">
                 Discover how technology and sustainable farming combine to create smarter, more efficient agriculture.
               </p>
             </div>
@@ -828,13 +928,13 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: false, amount: 0.15 }}
                   transition={{ duration: 0.8 }}
-                  className="w-full h-80 rounded-[24px] overflow-hidden border border-white/10 shadow-2xl relative group"
+                  className="w-full h-80 rounded-[24px] overflow-hidden border border-[#CFF5C8] shadow-2xl relative group"
                 >
                   <img src={item.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={item.title} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 p-5 bg-black/45 backdrop-blur-md rounded-2xl border border-white/10 text-white">
-                    <h4 className="text-base font-black">{item.title}</h4>
-                    <p className="text-xs text-white/80 mt-1 font-semibold">{item.desc}</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent opacity-90" />
+                  <div className="absolute bottom-6 left-6 right-6 p-5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#CFF5C8] text-[#1B1B1B]">
+                    <h4 className="text-base font-black text-[#1E3A1A]">{item.title}</h4>
+                    <p className="text-xs text-slate-600 mt-1 font-semibold">{item.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -846,20 +946,20 @@ export default function Landing() {
             <div className="max-w-7xl mx-auto px-6 w-full text-center mb-12 relative z-20">
               <motion.div 
                 {...fadeInScroll}
-                className="inline-flex items-center gap-2 bg-[#A7C957]/10 text-[#A7C957] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#A7C957]/20"
+                className="inline-flex items-center gap-2 bg-[#6DBE45]/10 text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#6DBE45]/20"
               >
                 <span>SMART AGRICULTURE</span>
               </motion.div>
               <motion.h2 
                 {...fadeInScroll}
-                className="text-4xl lg:text-5xl font-black text-white tracking-tight"
+                className="text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight"
                 style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
               >
                 Experience the Future of Modern Farming
               </motion.h2>
               <motion.p 
                 {...fadeInScroll}
-                className="text-slate-300 font-semibold text-base mt-4 max-w-2xl mx-auto"
+                className="text-slate-500 font-semibold text-base mt-4 max-w-2xl mx-auto"
               >
                 Discover how technology and sustainable farming combine to create smarter, more efficient agriculture.
               </motion.p>
@@ -868,6 +968,7 @@ export default function Landing() {
             {/* Horizontal Cards Area */}
             <div className="w-full flex items-center relative z-10">
               <motion.div 
+                farmingCardsContainerRef
                 ref={farmingCardsContainerRef}
                 style={{ x: farmingX }}
                 className="flex gap-12 px-[20vw] w-max"
@@ -899,13 +1000,13 @@ export default function Landing() {
                     <motion.div 
                       key={idx}
                       style={{ scale: scales[idx] }}
-                      className="w-[60vw] md:w-[45vw] h-[45vh] md:h-[50vh] flex-shrink-0 relative rounded-[32px] overflow-hidden shadow-2xl border border-white/10 group transition-all duration-500"
+                      className="w-[60vw] md:w-[45vw] h-[45vh] md:h-[50vh] flex-shrink-0 relative rounded-[32px] overflow-hidden shadow-2xl border border-[#CFF5C8] group transition-all duration-500 bg-white"
                     >
                       <img src={item.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={item.title} />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#131d11]/90 via-transparent to-transparent opacity-80" />
-                      <div className="absolute bottom-6 left-6 right-6 p-6 bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white">
-                        <h4 className="text-lg font-black text-[#A7C957]">{item.title}</h4>
-                        <p className="text-xs text-slate-200 mt-1 font-semibold">{item.desc}</p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent opacity-90" />
+                      <div className="absolute bottom-6 left-6 right-6 p-6 bg-white/90 backdrop-blur-md rounded-2xl border border-[#CFF5C8] text-[#1B1B1B]">
+                        <h4 className="text-lg font-black text-[#1E3A1A]">{item.title}</h4>
+                        <p className="text-xs text-slate-600 mt-1 font-semibold">{item.desc}</p>
                       </div>
                     </motion.div>
                   );
@@ -914,49 +1015,59 @@ export default function Landing() {
             </div>
 
             {/* Glowing background highlights */}
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#A7C957]/5 rounded-full blur-[160px] pointer-events-none z-0" />
-            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#5D7C3F]/5 rounded-full blur-[140px] pointer-events-none z-0" />
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#6DBE45]/5 rounded-full blur-[160px] pointer-events-none z-0" />
+            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#A8E6A1]/5 rounded-full blur-[140px] pointer-events-none z-0" />
           </div>
         )}
       </section>
 
       {/* 3. Stats Row */}
-      <section className="bg-[#314B2C] text-white py-16 border-y border-[#5D7C3F]/20 relative z-10">
+      <section className="bg-gradient-to-r from-[#EAFBE7] via-[#CFF5C8] to-[#EAFBE7] text-[#1E3A1A] py-20 md:py-24 border-y border-[#A8E6A1]/40 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 text-center">
-            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center">
-              <span className="text-3.5xl lg:text-4.5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">45%</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-1.5 tracking-wider">Increase in Yield</span>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center">
-              <span className="text-3.5xl lg:text-4.5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">60%</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-1.5 tracking-wider">Reduction in Costs</span>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center">
-              <span className="text-3.5xl lg:text-4.5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">24/7</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-1.5 tracking-wider">AI Monitoring</span>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.05 }} className="flex flex-col items-center">
-              <span className="text-3.5xl lg:text-4.5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">10K+</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-1.5 tracking-wider">Happy Farmers</span>
-            </motion.div>
-          </div>
+          <motion.div 
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="whileInView"
+            viewport={{ once: false, amount: 0.15 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 items-center justify-center text-center"
+          >
+            {[
+              { num: "45%", label: "Increase in Yield" },
+              { num: "60%", label: "Reduction in Costs" },
+              { num: "24/7", label: "AI Monitoring" },
+              { num: "10K+", label: "Happy Farmers" }
+            ].map((stat, i) => (
+              <motion.div 
+                key={i} 
+                variants={staggerChild}
+                whileHover={{ scale: 1.05, y: -4 }}
+                className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl bg-white/70 border border-[#A8E6A1]/30 hover:border-[#6DBE45] shadow-sm hover:shadow-md transition-all duration-300"
+              >
+                <span className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#6DBE45] tracking-tight drop-shadow-[0_0_20px_rgba(109,190,69,0.15)]">
+                  {stat.num}
+                </span>
+                <span className="text-xs sm:text-sm md:text-base uppercase font-black text-[#1E3A1A] mt-3 tracking-wider max-w-[200px] text-center leading-snug">
+                  {stat.label}
+                </span>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </section>
 
       {/* 4. Features Grid */}
-      <section id="features" className="py-32 bg-[#F7F5EF] relative overflow-hidden z-10">
+      <section id="features" className="py-32 bg-[#F9FBF8] relative overflow-hidden z-10">
         <div className="absolute inset-0 opacity-[0.03] bg-cover bg-center pointer-events-none mix-blend-overlay"
              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1605001011156-cbf0b0f67a51?q=80&w=2000)' }} />
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8]">
             <span>Powerful Features</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1B1B1B] tracking-tight mb-20"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight mb-20"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Everything You Need to Succeed
@@ -971,32 +1082,32 @@ export default function Landing() {
           >
             {[
               {
-                icon: <Sprout className="w-6 h-6 text-[#314B2C]" />,
+                icon: <Sprout className="w-6 h-6 text-[#6DBE45]" />,
                 title: "Crop Management",
                 desc: "Plan, monitor, and manage your crops throughout their lifecycle."
               },
               {
-                icon: <Zap className="w-6 h-6 text-[#314B2C]" />,
+                icon: <Zap className="w-6 h-6 text-[#6DBE45]" />,
                 title: "AI Disease Detection",
                 desc: "Detect diseases early with AI-powered image analysis."
               },
               {
-                icon: <Cloud className="w-6 h-6 text-[#314B2C]" />,
+                icon: <Cloud className="w-6 h-6 text-[#6DBE45]" />,
                 title: "Weather Intelligence",
                 desc: "Real-time weather updates and forecasts for better planning."
               },
               {
-                icon: <Activity className="w-6 h-6 text-[#314B2C]" />,
+                icon: <Activity className="w-6 h-6 text-[#6DBE45]" />,
                 title: "Soil Health Monitoring",
                 desc: "Monitor soil health and get personalized recommendations."
               },
               {
-                icon: <TrendingUp className="w-6 h-6 text-[#314B2C]" />,
+                icon: <TrendingUp className="w-6 h-6 text-[#6DBE45]" />,
                 title: "Financial Management",
                 desc: "Track expenses, revenue, and profitability in real-time."
               },
               {
-                icon: <Layers className="w-6 h-6 text-[#314B2C]" />,
+                icon: <Layers className="w-6 h-6 text-[#6DBE45]" />,
                 title: "Smart Analytics",
                 desc: "Get insights and reports to make data-driven decisions."
               }
@@ -1005,16 +1116,16 @@ export default function Landing() {
                 key={i}
                 variants={staggerChild}
                 whileHover={{ y: -8, scale: 1.01 }}
-                className={`bg-white/60 backdrop-blur-sm p-10 rounded-[32px] border border-[#EAE4D5] shadow-sm text-left flex flex-col items-start group hover:border-[#5D7C3F]/40 hover:bg-white hover:shadow-xl hover:shadow-[#5D7C3F]/5 transition-all duration-300 relative overflow-hidden ${i === 0 || i === 3 || i === 5 ? 'lg:col-span-2' : 'lg:col-span-1'}`}
+                className={`bg-white border border-[#CFF5C8] p-10 rounded-[32px] shadow-sm text-left flex flex-col items-start group hover:border-[#6DBE45] hover:bg-white hover:shadow-xl hover:shadow-[#6DBE45]/5 transition-all duration-300 relative overflow-hidden ${i === 0 || i === 3 || i === 5 ? 'lg:col-span-2' : 'lg:col-span-1'}`}
               >
-                <div className="w-12 h-12 rounded-xl bg-[#314B2C]/10 flex items-center justify-center mb-6 group-hover:bg-[#314B2C] group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#314B2C]/20">
-                  {React.cloneElement(f.icon, { className: 'w-6 h-6 text-[#314B2C] group-hover:text-white transition-colors' })}
+                <div className="w-12 h-12 rounded-xl bg-[#EAFBE7] flex items-center justify-center mb-6 group-hover:bg-[#6DBE45] group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#6DBE45]/20">
+                  {React.cloneElement(f.icon, { className: 'w-6 h-6 text-[#6DBE45] group-hover:text-white transition-colors' })}
                 </div>
-                <h3 className="text-xl font-black text-[#1B1B1B] mb-2">{f.title}</h3>
+                <h3 className="text-xl font-black text-[#1E3A1A] mb-2">{f.title}</h3>
                 <p className="text-sm font-semibold text-[#6B7280] leading-relaxed">{f.desc}</p>
                 
                 {/* Subtle border gradient indicator on hover */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#5D7C3F] to-[#A7C957] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </motion.div>
             ))}
           </motion.div>
@@ -1022,19 +1133,19 @@ export default function Landing() {
       </section>
 
       {/* 4.5 Cinematic Horizontal Scroll Showcase */}
-      <section ref={showcaseRef} className="relative h-auto lg:h-[180vh] bg-[#131d11] text-white z-20 py-16 lg:py-0">
+      <section ref={showcaseRef} className="relative h-auto lg:h-[180vh] bg-gradient-to-b from-[#EAFBE7] via-[#F9FBF8] to-white text-[#1B1B1B] z-20 py-16 lg:py-0">
         <div className="relative lg:sticky lg:top-0 lg:h-screen flex flex-col justify-center overflow-hidden">
           
           {/* Section Header */}
           <div className="max-w-7xl mx-auto px-6 mb-12 w-full z-10 text-left">
-            <div className="inline-flex items-center gap-2 bg-[#A7C957]/10 text-[#A7C957] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#A7C957]/20">
-              <Sparkles className="w-3.5 h-3.5 text-[#A7C957] animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-[#6DBE45]/10 text-[#6DBE45] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#6DBE45]/20">
+              <Sparkles className="w-3.5 h-3.5 text-[#6DBE45] animate-pulse" />
               <span>AgriAI Operations</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <h2 className="text-3xl sm:text-5xl font-black text-[#1E3A1A] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               Operational Field Showcase
             </h2>
-            <p className="text-sm font-semibold text-slate-350 mt-2 max-w-2xl">
+            <p className="text-sm font-semibold text-slate-500 mt-2 max-w-2xl">
               Scroll down to watch our smart technology orchestrating yield enhancements across farms globally.
             </p>
           </div>
@@ -1049,17 +1160,17 @@ export default function Landing() {
               <motion.div
                 key={idx}
                 whileHover={isMobile ? {} : { scale: 1.03, y: -6 }}
-                className="w-72 sm:w-80 h-[380px] rounded-2xl border border-white/10 bg-[#243720]/45 backdrop-blur-md overflow-hidden relative group shadow-lg hover:shadow-[#A7C957]/10 hover:border-[#A7C957]/30 transition-all duration-300 flex-shrink-0 snap-center"
+                className="w-72 sm:w-80 h-[380px] rounded-2xl border border-[#CFF5C8] bg-white overflow-hidden relative group shadow-lg hover:shadow-[#6DBE45]/10 hover:border-[#6DBE45] transition-all duration-300 flex-shrink-0 snap-center"
               >
                 <img src={item.url} className="w-full h-[60%] object-cover group-hover:scale-105 transition-transform duration-500" alt={item.title} loading="lazy" />
                 <div className="p-5 h-[40%] flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-black text-white">{item.title}</h3>
-                    <p className="text-[10px] font-semibold text-slate-300 mt-1 leading-relaxed">{item.desc}</p>
+                    <h3 className="text-sm font-black text-[#1E3A1A]">{item.title}</h3>
+                    <p className="text-[10px] font-semibold text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
                   </div>
-                  <div className="flex justify-between items-center text-[9px] font-black text-[#A7C957] uppercase tracking-wide border-t border-white/5 pt-2">
+                  <div className="flex justify-between items-center text-[9px] font-black text-[#6DBE45] uppercase tracking-wide border-t border-[#CFF5C8]/40 pt-2">
                     <span>{item.category}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#A7C957]" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#6DBE45]" />
                   </div>
                 </div>
               </motion.div>
@@ -1067,22 +1178,22 @@ export default function Landing() {
           </motion.div>
 
           {/* Background decorative glow in dark section */}
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#A7C957]/5 rounded-full blur-3xl pointer-events-none z-0" />
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#6DBE45]/5 rounded-full blur-3xl pointer-events-none z-0" />
         </div>
       </section>
 
       {/* 5. How It Works - Timeline Flow */}
-      <section id="how-it-works" className="py-32 bg-[#F7F5EF] border-t border-[#EAE4D5] relative overflow-hidden z-10">
+      <section id="how-it-works" className="py-32 bg-[#F9FBF8] border-t border-[#CFF5C8] relative overflow-hidden z-10">
         <div className="absolute inset-0 opacity-[0.04] bg-cover bg-center pointer-events-none mix-blend-overlay"
              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2000)' }} />
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8]">
             <span>How It Works</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1B1B1B] tracking-tight mb-20"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight mb-20"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Simple Steps to Smarter Farming
@@ -1090,12 +1201,12 @@ export default function Landing() {
 
           <div className="relative">
             {/* Horizontal Timeline Connector Line with custom green layout */}
-            <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-0.5 bg-[#EAE4D5] z-0">
+            <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-0.5 bg-[#CFF5C8] z-0">
               <motion.div 
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: false, amount: 0.5 }}
-                className="h-full bg-[#314B2C] origin-left"
+                className="h-full bg-[#6DBE45] origin-left"
                 transition={{ duration: 1.5, ease: "easeInOut" }}
               />
             </div>
@@ -1114,10 +1225,10 @@ export default function Landing() {
                 { step: "04", title: "Improve & Grow", desc: "Take action and see measurable improvements in yield." }
               ].map((s, idx) => (
                 <motion.div key={idx} variants={staggerChild} className="flex flex-col items-center group">
-                  <div className="w-20 h-20 bg-[#314B2C] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#314B2C]/10 mb-5 text-xl font-black border-4 border-white group-hover:bg-[#5D7C3F] group-hover:scale-105 transition-all duration-300">
+                  <div className="w-20 h-20 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#6DBE45]/15 mb-5 text-xl font-black border-4 border-white group-hover:from-[#5da539] group-hover:to-[#92d08a] group-hover:scale-105 transition-all duration-300">
                     {s.step}
                   </div>
-                  <h3 className="text-lg font-black text-[#1B1B1B] mb-2">{s.title}</h3>
+                  <h3 className="text-lg font-black text-[#1E3A1A] mb-2">{s.title}</h3>
                   <p className="text-xs font-semibold text-[#6B7280] max-w-[200px] leading-relaxed">{s.desc}</p>
                 </motion.div>
               ))}
@@ -1127,8 +1238,8 @@ export default function Landing() {
       </section>
 
       {/* 6. Intelligent Crop Health Diagnosis / Leaf Upload */}
-      <section className="py-32 bg-[#314B2C] text-[#F7F5EF] overflow-hidden relative z-10">
-        <div className="absolute top-0 right-0 w-[45%] h-full opacity-10 bg-[#A7C957] filter blur-3xl pointer-events-none" />
+      <section className="py-32 bg-[#EAFBE7] text-[#1B1B1B] overflow-hidden relative z-10 border-t border-[#CFF5C8]">
+        <div className="absolute top-0 right-0 w-[45%] h-full opacity-10 bg-[#6DBE45] filter blur-3xl pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -1138,13 +1249,13 @@ export default function Landing() {
               {...slideInLeft}
               className="lg:col-span-5"
             >
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-[#A7C957] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6">
+              <div className="inline-flex items-center gap-2 bg-white/70 border border-[#CFF5C8] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm">
                 <span>AI Disease Diagnosis</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight leading-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Detect Problems Early. <br />Save Your Crop.
               </h2>
-              <p className="text-sm sm:text-base text-[#EAE4D5] font-semibold leading-relaxed mb-6">
+              <p className="text-sm sm:text-base text-[#6B7280] font-semibold leading-relaxed mb-6">
                 Select a crop type to test scan, or upload your own leaf image. Our AI analyzes details instantly.
               </p>
 
@@ -1158,7 +1269,7 @@ export default function Landing() {
                       setScanResultReady(false);
                       setUploadedImage(null);
                     }}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer ${selectedLeaf.id === leaf.id ? 'bg-[#A7C957] border-[#A7C957] text-[#314B2C] shadow-lg shadow-[#A7C957]/10 scale-[1.02]' : 'bg-[#243720] border-[#314B2C] text-[#A7C957] hover:bg-[#1B2A18]'}`}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer ${selectedLeaf.id === leaf.id ? 'bg-[#6DBE45] border-[#6DBE45] text-white shadow-lg shadow-[#6DBE45]/10 scale-[1.02]' : 'bg-white border-[#CFF5C8] text-[#1E3A1A] hover:bg-[#EAFBE7]'}`}
                   >
                     {leaf.name}
                   </button>
@@ -1173,17 +1284,17 @@ export default function Landing() {
                   "Save time and increase yield"
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-[#A7C957]/20 rounded-full flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 text-[#A7C957]" />
+                    <div className="w-5 h-5 bg-[#6DBE45]/10 rounded-full flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-[#6DBE45]" />
                     </div>
-                    <span className="text-sm font-bold text-[#EAE4D5]">{item}</span>
+                    <span className="text-sm font-bold text-[#1E3A1A]">{item}</span>
                   </div>
                 ))}
               </div>
 
               <button 
                 onClick={startDemoScan}
-                className="flex items-center gap-2 bg-[#A7C957] hover:bg-[#A7C957]/90 text-[#314B2C] font-bold px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-[#A7C957]/10 hover:scale-[1.02]"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] hover:from-[#5da539] hover:to-[#92d08a] text-white font-extrabold px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-[#6DBE45]/10 hover:scale-[1.02]"
               >
                 <span>Scan {selectedLeaf.name}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1199,7 +1310,7 @@ export default function Landing() {
               {/* Image Uploader Mockup */}
               <div 
                 onClick={startDemoScan}
-                className="bg-[#1B2A18] rounded-[24px] border-2 border-dashed border-[#5D7C3F] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#A7C957] hover:bg-[#243720]/40 transition-all duration-300 h-72 md:h-auto relative overflow-hidden"
+                className="bg-white rounded-[24px] border-2 border-dashed border-[#A8E6A1] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#6DBE45] hover:bg-[#EAFBE7]/40 transition-all duration-300 h-72 md:h-auto relative overflow-hidden shadow-sm"
               >
                 {uploadedImage || isScanning ? (
                   <>
@@ -1209,26 +1320,26 @@ export default function Landing() {
                         initial={{ top: '0%' }}
                         animate={{ top: '100%' }}
                         transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                        className="absolute left-0 w-full h-1 bg-[#A7C957] shadow-[0_0_15px_#A7C957] z-10"
+                        className="absolute left-0 w-full h-1 bg-[#6DBE45] shadow-[0_0_15px_#6DBE45] z-10"
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/40 z-0" />
-                    <span className="relative z-10 bg-[#1B2A18]/80 text-[#A7C957] px-3.5 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase border border-[#314B2C]">
+                    <div className="absolute inset-0 bg-black/30 z-0" />
+                    <span className="relative z-10 bg-[#EAFBE7]/90 text-[#6DBE45] px-3.5 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase border border-[#CFF5C8]">
                       {isScanning ? 'Scanning Leaf...' : 'Scan Complete'}
                     </span>
                   </>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <UploadCloud className="w-12 h-12 text-[#A7C957] mb-4 animate-bounce" style={{ animationDuration: '3s' }} />
-                    <h4 className="text-sm font-black text-white mb-1">Drag & drop or click</h4>
-                    <p className="text-xs font-semibold text-[#EAE4D5]/60 mb-4">to upload leaf photo</p>
-                    <span className="text-[10px] font-black text-[#EAE4D5]/40 bg-[#1B2A18]/50 px-3 py-1 rounded-md border border-[#314B2C]">.JPG, .PNG up to 5MB</span>
+                    <UploadCloud className="w-12 h-12 text-[#6DBE45] mb-4 animate-bounce" style={{ animationDuration: '3s' }} />
+                    <h4 className="text-sm font-black text-[#1E3A1A] mb-1">Drag & drop or click</h4>
+                    <p className="text-xs font-semibold text-[#6B7280] mb-4">to upload leaf photo</p>
+                    <span className="text-[10px] font-black text-[#1E3A1A]/50 bg-[#EAFBE7] px-3 py-1 rounded-md border border-[#CFF5C8]">.JPG, .PNG up to 5MB</span>
                   </div>
                 )}
               </div>
 
               {/* Diagnosis Result Card */}
-              <div className="bg-white text-[#1B1B1B] rounded-[24px] p-8 shadow-xl border border-[#EAE4D5] flex flex-col justify-between hover:border-[#5D7C3F]/20 transition-all">
+              <div className="bg-white text-[#1B1B1B] rounded-[24px] p-8 shadow-xl border border-[#CFF5C8] flex flex-col justify-between hover:border-[#6DBE45]/20 transition-all">
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <h4 className="text-[10px] uppercase font-black tracking-wider text-slate-400">Diagnosis Result</h4>
@@ -1249,26 +1360,26 @@ export default function Landing() {
                       <div>
                         <div className="flex justify-between text-[11px] font-bold text-slate-700 mb-1.5">
                           <span>Confidence Score</span>
-                          <span className="text-[#314B2C] font-extrabold">{selectedLeaf.confidence}</span>
+                          <span className="text-[#6DBE45] font-extrabold">{selectedLeaf.confidence}</span>
                         </div>
-                        <div className="h-2 w-full bg-[#EAE4D5] rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-[#EAFBE7] rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: selectedLeaf.confidence }}
                             transition={{ duration: 1 }}
-                            className="h-full bg-[#314B2C] rounded-full" 
+                            className="h-full bg-[#6DBE45] rounded-full" 
                           />
                         </div>
                       </div>
                       
-                      <div className="border-t border-[#EAE4D5] pt-3.5">
+                      <div className="border-t border-[#CFF5C8]/40 pt-3.5">
                         <p className="text-[10px] font-black text-slate-400 mb-1 uppercase tracking-wide">Recommended Treatment</p>
-                        <p className="text-xs font-bold text-[#314B2C] leading-relaxed">{selectedLeaf.treatment}</p>
+                        <p className="text-xs font-bold text-[#1E3A1A] leading-relaxed">{selectedLeaf.treatment}</p>
                       </div>
                     </div>
                   ) : (
                     <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center h-full">
-                      <div className="w-10 h-10 rounded-full bg-[#F7F5EF] flex items-center justify-center text-slate-400 mb-3 border border-[#EAE4D5]">?</div>
+                      <div className="w-10 h-10 rounded-full bg-[#F9FBF8] flex items-center justify-center text-slate-400 mb-3 border border-[#CFF5C8]">?</div>
                       <p className="text-xs font-bold text-slate-500">No diagnosis completed yet.</p>
                       <p className="text-[10px] font-semibold mt-1">Select a leaf type and press "Scan {selectedLeaf.name}".</p>
                     </div>
@@ -1278,7 +1389,7 @@ export default function Landing() {
                 {scanResultReady && (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="w-full text-center py-3 mt-4 bg-[#314B2C] hover:bg-[#5D7C3F] text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
+                    className="w-full text-center py-3 mt-4 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] hover:from-[#5da539] hover:to-[#92d08a] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
                   >
                     View Details
                   </button>
@@ -1292,19 +1403,19 @@ export default function Landing() {
       </section>
 
       {/* Dynamic ROI Yield Calculator Section */}
-      <section className="py-32 bg-[#F7F5EF] relative z-10 border-t border-[#EAE4D5]">
+      <section className="py-32 bg-white relative z-10 border-t border-[#CFF5C8]">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20">
+          <div className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8]">
             <span>Dynamic ROI Calculator</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#1B1B1B] tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#1E3A1A] tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             Calculate Your Farm's AI Yield Potential
           </h2>
           <p className="text-[#6B7280] font-semibold text-sm mb-12">
             Slide and adjust your farm sizes to see dynamic projections of your seasonal earnings and chemical savings.
           </p>
 
-          <div className="grid md:grid-cols-12 gap-8 items-center bg-white/60 border border-[#EAE4D5] rounded-[32px] p-8 shadow-sm text-left">
+          <div className="grid md:grid-cols-12 gap-8 items-center bg-[#EAFBE7]/60 border border-[#CFF5C8] rounded-[32px] p-8 shadow-sm text-left">
             {/* Inputs */}
             <div className="md:col-span-7 space-y-6">
               <div>
@@ -1314,7 +1425,7 @@ export default function Landing() {
                     <button
                       key={crop}
                       onClick={() => setCropType(crop)}
-                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all capitalize cursor-pointer ${cropType === crop ? 'bg-[#314B2C]/10 border-[#314B2C] text-[#314B2C]' : 'bg-white border-[#EAE4D5] text-[#6B7280] hover:border-[#5D7C3F]/40'}`}
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all capitalize cursor-pointer ${cropType === crop ? 'bg-[#EAFBE7] border-[#6DBE45] text-[#1E3A1A]' : 'bg-white border-[#CFF5C8] text-[#6B7280] hover:border-[#6DBE45]/45'}`}
                     >
                       {crop}
                     </button>
@@ -1325,7 +1436,7 @@ export default function Landing() {
               <div>
                 <div className="flex justify-between text-xs font-black text-[#6B7280] uppercase tracking-wider mb-2">
                   <span>Farm Size (Acres)</span>
-                  <span className="text-[#314B2C] font-black">{farmAcres} Acres</span>
+                  <span className="text-[#6DBE45] font-black">{farmAcres} Acres</span>
                 </div>
                 <input
                   type="range"
@@ -1333,7 +1444,7 @@ export default function Landing() {
                   max="1000"
                   value={farmAcres}
                   onChange={(e) => setFarmAcres(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#314B2C]"
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6DBE45]"
                 />
                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-1.5">
                   <span>10 Acres</span>
@@ -1344,20 +1455,20 @@ export default function Landing() {
             </div>
 
             {/* Dynamic Results */}
-            <div className="md:col-span-5 bg-[#314B2C] text-[#F7F5EF] p-8 border border-[#314B2C] rounded-[24px] flex flex-col gap-4 shadow-lg">
+            <div className="md:col-span-5 bg-gradient-to-br from-[#6DBE45] to-[#A8E6A1] text-white p-8 border border-[#CFF5C8]/10 rounded-[24px] flex flex-col gap-4 shadow-lg">
               <div>
-                <p className="text-[10px] font-black text-[#A7C957] uppercase tracking-wider">Additional Revenue</p>
+                <p className="text-[10px] font-black text-white/80 uppercase tracking-wider">Additional Revenue</p>
                 <h4 className="text-3xl font-black mt-1 text-white">${roi.revenue}</h4>
-                <p className="text-[9px] text-[#EAE4D5]/60 font-bold mt-0.5">Based on average crop market prices</p>
+                <p className="text-[9px] text-white/70 font-bold mt-0.5">Based on average crop market prices</p>
               </div>
-              <div className="h-px bg-[#5D7C3F]/30" />
+              <div className="h-px bg-white/20" />
               <div className="grid grid-cols-2 gap-4 text-xs font-bold">
                 <div>
-                  <p className="text-[#EAE4D5]/60 text-[9px] uppercase tracking-wider">Fertilizer Saved</p>
+                  <p className="text-white/80 text-[9px] uppercase tracking-wider">Fertilizer Saved</p>
                   <p className="text-white mt-0.5">${roi.fertilizer}</p>
                 </div>
                 <div>
-                  <p className="text-[#EAE4D5]/60 text-[9px] uppercase tracking-wider">Water Saved</p>
+                  <p className="text-white/80 text-[9px] uppercase tracking-wider">Water Saved</p>
                   <p className="text-white mt-0.5">{roi.water} Gal</p>
                 </div>
               </div>
@@ -1367,15 +1478,15 @@ export default function Landing() {
       </section>
 
       {/* 7. Testimonials Slider */}
-      <section className="py-32 bg-[#F7F5EF] relative z-10 border-t border-[#EAE4D5]">
+      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#CFF5C8]">
         <div className="max-w-7xl mx-auto px-6 text-center">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8]">
             <span>What Farmers Say</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl font-black text-[#1B1B1B] tracking-tight mb-16"
+            className="text-3xl sm:text-4xl font-black text-[#1E3A1A] tracking-tight mb-16"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Trusted by Farmers Worldwide
@@ -1383,7 +1494,7 @@ export default function Landing() {
 
           <div className="relative max-w-4xl mx-auto">
             {/* Slide animation container */}
-            <div className="overflow-hidden bg-white/60 border border-[#EAE4D5] rounded-[32px] p-8 md:p-12 shadow-sm min-h-[220px] flex flex-col justify-between">
+            <div className="overflow-hidden bg-white border border-[#CFF5C8] rounded-[32px] p-8 md:p-12 shadow-sm min-h-[220px] flex flex-col justify-between">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={testimonialIndex}
@@ -1416,7 +1527,7 @@ export default function Landing() {
             <div className="flex justify-center items-center gap-4 mt-8">
               <button 
                 onClick={() => setTestimonialIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
-                className="w-10 h-10 rounded-full bg-white border border-[#EAE4D5] text-[#1B1B1B] hover:bg-[#EAE4D5] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
+                className="w-10 h-10 rounded-full bg-white border border-[#CFF5C8] text-[#1B1B1B] hover:bg-[#EAFBE7] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -1425,7 +1536,7 @@ export default function Landing() {
               </span>
               <button 
                 onClick={() => setTestimonialIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
-                className="w-10 h-10 rounded-full bg-white border border-[#EAE4D5] text-[#1B1B1B] hover:bg-[#EAE4D5] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
+                className="w-10 h-10 rounded-full bg-white border border-[#CFF5C8] text-[#1B1B1B] hover:bg-[#EAFBE7] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -1436,15 +1547,15 @@ export default function Landing() {
       </section>
 
       {/* 8. Pricing Section with Toggle */}
-      <section id="pricing" className="py-32 bg-[#F7F5EF] relative z-10 border-t border-[#EAE4D5]">
+      <section id="pricing" className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#CFF5C8]">
         <div className="max-w-7xl mx-auto px-6 text-center">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8]">
             <span>Simple Pricing</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1B1B1B] tracking-tight mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight mb-4"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Choose the Perfect Plan
@@ -1455,13 +1566,13 @@ export default function Landing() {
             <span className="text-xs font-black text-[#6B7280] uppercase tracking-wide">Monthly</span>
             <button 
               onClick={() => setIsYearly(!isYearly)}
-              className={`w-12 h-6.5 rounded-full p-1 flex items-center transition-colors cursor-pointer ${isYearly ? 'bg-[#314B2C]' : 'bg-[#EAE4D5]'}`}
+              className={`w-12 h-6.5 rounded-full p-1 flex items-center transition-colors cursor-pointer ${isYearly ? 'bg-[#6DBE45]' : 'bg-[#CFF5C8]'}`}
             >
               <div className={`w-4.5 h-4.5 rounded-full bg-white transition-transform ${isYearly ? 'translate-x-5.5' : 'translate-x-0'} shadow-sm`} />
             </button>
-            <span className="text-xs font-black text-[#314B2C] uppercase tracking-wide flex items-center gap-1.5">
+            <span className="text-xs font-black text-[#6DBE45] uppercase tracking-wide flex items-center gap-1.5">
               <span>Yearly</span>
-              <span className="bg-[#A7C957]/20 text-[#314B2C] text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">Save 20%</span>
+              <span className="bg-[#EAFBE7] text-[#6DBE45] text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase border border-[#CFF5C8]">Save 20%</span>
             </span>
           </div>
 
@@ -1477,41 +1588,41 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -6 }}
-              className="bg-white rounded-[32px] p-8 border border-[#EAE4D5] hover:border-[#5D7C3F]/40 shadow-sm flex flex-col text-left transition-all duration-300"
+              className="bg-white rounded-[32px] p-8 border border-[#CFF5C8] hover:border-[#6DBE45]/40 shadow-sm flex flex-col text-left transition-all duration-300"
             >
-              <h3 className="text-xl font-black text-[#1B1B1B] mb-1">Starter</h3>
+              <h3 className="text-xl font-black text-[#1E3A1A] mb-1">Starter</h3>
               <p className="text-xs font-semibold text-[#6B7280] mb-6">Perfect for small farms</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-[#1B1B1B]">
+                <span className="text-4xl font-black text-[#1E3A1A]">
                   ${isYearly ? '39' : '49'}
                 </span>
                 <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#EAE4D5] mb-6" />
+              <div className="h-px bg-[#CFF5C8]/50 mb-6" />
 
-              <ul className="space-y-4 text-[#1B1B1B] font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#1E3A1A] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Up to 10 fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Basic crop monitoring</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Weather updates</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Email support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 border border-[#EAE4D5] hover:bg-[#EAE4D5]/35 text-[#1B1B1B] font-bold rounded-xl text-sm transition-all cursor-pointer"
+                className="w-full text-center py-3 border border-[#CFF5C8] hover:bg-[#EAFBE7] text-[#1E3A1A] font-bold rounded-xl text-sm transition-all cursor-pointer"
               >
                 Start Free Trial
               </button>
@@ -1521,45 +1632,45 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -8, scale: 1.01 }}
-              className="bg-[#314B2C] text-[#F7F5EF] rounded-[32px] p-8 border-2 border-[#5D7C3F] shadow-xl relative flex flex-col text-left transition-all duration-300"
+              className="bg-gradient-to-b from-[#EAFBE7] to-white text-[#1E3A1A] rounded-[32px] p-8 border-2 border-[#6DBE45] shadow-xl relative flex flex-col text-left transition-all duration-300"
             >
-              <div className="absolute top-0 right-8 -translate-y-1/2 bg-[#A7C957] text-[#314B2C] text-[10px] font-black tracking-wide uppercase px-3.5 py-1 rounded-full shadow-md">
+              <div className="absolute top-0 right-8 -translate-y-1/2 bg-[#6DBE45] text-white text-[10px] font-black tracking-wide uppercase px-3.5 py-1 rounded-full shadow-md">
                 Most Popular
               </div>
               
-              <h3 className="text-xl font-black text-white mb-1">Professional</h3>
-              <p className="text-xs font-semibold text-[#EAE4D5]/70 mb-6">For growing farms</p>
+              <h3 className="text-xl font-black text-[#1E3A1A] mb-1">Professional</h3>
+              <p className="text-xs font-semibold text-[#6B7280] mb-6">For growing farms</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-white">
+                <span className="text-4xl font-black text-[#1E3A1A]">
                   ${isYearly ? '99' : '129'}
                 </span>
-                <span className="text-[#EAE4D5]/70 text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
+                <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#5D7C3F]/30 mb-6" />
+              <div className="h-px bg-[#CFF5C8] mb-6" />
 
-              <ul className="space-y-4 text-white font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#1E3A1A] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#A7C957] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Up to 50 fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#A7C957] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>AI disease detection</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#A7C957] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Advanced analytics</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#A7C957] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Priority support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 bg-[#A7C957] hover:bg-[#A7C957]/90 text-[#314B2C] font-bold rounded-xl text-sm transition-all shadow-md shadow-[#A7C957]/10 cursor-pointer"
+                className="w-full text-center py-3 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] hover:from-[#5da539] hover:to-[#92d08a] text-white font-extrabold rounded-xl text-sm transition-all shadow-md shadow-[#6DBE45]/15 cursor-pointer"
               >
                 Start Free Trial
               </button>
@@ -1569,41 +1680,41 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -6 }}
-              className="bg-white rounded-[32px] p-8 border border-[#EAE4D5] hover:border-[#5D7C3F]/40 shadow-sm flex flex-col text-left transition-all duration-300"
+              className="bg-white rounded-[32px] p-8 border border-[#CFF5C8] hover:border-[#6DBE45]/40 shadow-sm flex flex-col text-left transition-all duration-300"
             >
-              <h3 className="text-xl font-black text-[#1B1B1B] mb-1">Enterprise</h3>
+              <h3 className="text-xl font-black text-[#1E3A1A] mb-1">Enterprise</h3>
               <p className="text-xs font-semibold text-[#6B7280] mb-6">For large farms & organizations</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-[#1B1B1B]">
+                <span className="text-4xl font-black text-[#1E3A1A]">
                   ${isYearly ? '319' : '399'}
                 </span>
                 <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#EAE4D5] mb-6" />
+              <div className="h-px bg-[#CFF5C8]/50 mb-6" />
 
-              <ul className="space-y-4 text-[#1B1B1B] font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#1E3A1A] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Unlimited fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Custom integrations</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>Advanced AI features</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#314B2C] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#6DBE45] flex-shrink-0" />
                   <span>24/7 phone support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 border border-[#EAE4D5] hover:bg-[#EAE4D5]/35 text-[#1B1B1B] font-bold rounded-xl text-sm transition-all cursor-pointer"
+                className="w-full text-center py-3 border border-[#CFF5C8] hover:bg-[#EAFBE7] text-[#1E3A1A] font-bold rounded-xl text-sm transition-all cursor-pointer"
               >
                 Contact Sales
               </button>
@@ -1620,27 +1731,27 @@ export default function Landing() {
       </section>
 
       {/* 9. Second Stats Row */}
-      <section className="bg-[#314B2C] text-[#F7F5EF] py-20 border-y border-[#5D7C3F]/20 relative z-10">
+      <section className="bg-gradient-to-r from-[#EAFBE7] via-[#CFF5C8] to-[#EAFBE7] text-[#1E3A1A] py-20 border-y border-[#A8E6A1]/40 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 text-center">
             <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">98%</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-2.5 tracking-wider">Prediction Accuracy</span>
+              <span className="text-4xl md:text-5xl font-black text-[#6DBE45] drop-shadow-[0_0_15px_rgba(109,190,69,0.15)]">98%</span>
+              <span className="text-xs uppercase font-black text-[#1E3A1A] mt-2.5 tracking-wider">Prediction Accuracy</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">50+</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-2.5 tracking-wider">Crops Supported</span>
+              <span className="text-4xl md:text-5xl font-black text-[#6DBE45] drop-shadow-[0_0_15px_rgba(109,190,69,0.15)]">50+</span>
+              <span className="text-xs uppercase font-black text-[#1E3A1A] mt-2.5 tracking-wider">Crops Supported</span>
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#A7C957] drop-shadow-[0_0_15px_rgba(167,201,87,0.3)]">24/7</span>
-              <span className="text-xs uppercase font-black text-[#EAE4D5] mt-2.5 tracking-wider">AI Support</span>
+              <span className="text-4xl md:text-5xl font-black text-[#6DBE45] drop-shadow-[0_0_15px_rgba(109,190,69,0.15)]">24/7</span>
+              <span className="text-xs uppercase font-black text-[#1E3A1A] mt-2.5 tracking-wider">AI Support</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 bg-[#F7F5EF] relative overflow-hidden z-10 border-t border-[#EAE4D5]">
+      <section id="about" className="py-32 bg-white relative overflow-hidden z-10 border-t border-[#CFF5C8]">
         <div className="absolute inset-0 opacity-[0.03] bg-cover bg-center pointer-events-none mix-blend-overlay"
              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070)' }} />
         
@@ -1651,10 +1762,10 @@ export default function Landing() {
               {...slideInLeft}
               className="lg:col-span-6"
             >
-              <div className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 border border-[#314B2C]/20">
+              <div className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 border border-[#CFF5C8]">
                 <span>About Our Software</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1B1B1B] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E3A1A] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 State-of-the-Art ERP <br />
                 Built for Modern Farming
               </h2>
@@ -1671,27 +1782,27 @@ export default function Landing() {
               {...slideInRight}
               className="lg:col-span-6 grid sm:grid-cols-2 gap-6"
             >
-              <div className="bg-white p-6 rounded-3xl border border-[#EAE4D5] hover:border-[#5D7C3F]/40 shadow-sm transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#314B2C] flex items-center justify-center text-white mb-4">
-                  <Sparkles className="w-5 h-5 text-[#A7C957]" />
+              <div className="bg-white p-6 rounded-3xl border border-[#CFF5C8] hover:border-[#6DBE45] shadow-sm transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#EAFBE7] flex items-center justify-center text-[#6DBE45] mb-4">
+                  <Sparkles className="w-5 h-5 text-[#6DBE45]" />
                 </div>
-                <h3 className="text-base font-black text-[#1B1B1B] mb-2">AI Diagnostics</h3>
+                <h3 className="text-base font-black text-[#1E3A1A] mb-2">AI Diagnostics</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Neural network analysis that highlights crop leaf disease markers in real-time.</p>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-[#EAE4D5] hover:border-[#5D7C3F]/40 shadow-sm transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#314B2C] flex items-center justify-center text-white mb-4">
-                  <TrendingUp className="w-5 h-5 text-[#A7C957]" />
+              <div className="bg-white p-6 rounded-3xl border border-[#CFF5C8] hover:border-[#6DBE45] shadow-sm transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#EAFBE7] flex items-center justify-center text-[#6DBE45] mb-4">
+                  <TrendingUp className="w-5 h-5 text-[#6DBE45]" />
                 </div>
-                <h3 className="text-base font-black text-[#1B1B1B] mb-2">Predictive Metrics</h3>
+                <h3 className="text-base font-black text-[#1E3A1A] mb-2">Predictive Metrics</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Predict seasonal yield rates and soil water levels with extreme accuracy.</p>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-[#EAE4D5] hover:border-[#5D7C3F]/40 shadow-sm col-span-1 sm:col-span-2 transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#314B2C] flex items-center justify-center text-white mb-4">
-                  <Layers className="w-5 h-5 text-[#A7C957]" />
+              <div className="bg-white p-6 rounded-3xl border border-[#CFF5C8] hover:border-[#6DBE45] shadow-sm col-span-1 sm:col-span-2 transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#EAFBE7] flex items-center justify-center text-[#6DBE45] mb-4">
+                  <Layers className="w-5 h-5 text-[#6DBE45]" />
                 </div>
-                <h3 className="text-base font-black text-[#1B1B1B] mb-2">Billing & Udhar Management</h3>
+                <h3 className="text-base font-black text-[#1E3A1A] mb-2">Billing & Udhar Management</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Generate GST-compliant invoices and keep clean records of ledger accounts for local suppliers and farmers.</p>
               </div>
             </motion.div>
@@ -1700,25 +1811,25 @@ export default function Landing() {
       </section>
 
       {/* 10. Frequently Asked Questions */}
-      <section className="py-32 bg-[#F7F5EF] relative z-10 border-t border-[#EAE4D5]">
+      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#CFF5C8]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-stretch">
             
             {/* Left FAQ accordion */}
             <motion.div {...fadeInScroll} className="flex flex-col justify-center">
-              <div className="inline-flex items-center gap-2 bg-[#314B2C]/10 text-[#314B2C] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#314B2C]/20 w-fit">
+              <div className="inline-flex items-center gap-2 bg-[#EAFBE7] text-[#6DBE45] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#CFF5C8] w-fit">
                 <span>FAQ</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#1B1B1B] tracking-tight mb-8" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#1E3A1A] tracking-tight mb-8" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Frequently Asked Questions
               </h2>
 
               <div className="space-y-4">
                 {faqs.map((faq, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-[#EAE4D5] overflow-hidden shadow-sm hover:border-[#5D7C3F]/40 transition-colors">
+                  <div key={i} className="bg-white rounded-2xl border border-[#CFF5C8] overflow-hidden shadow-sm hover:border-[#6DBE45] transition-colors">
                     <button 
                       onClick={() => setActiveFAQ(activeFAQ === i ? null : i)}
-                      className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-[#1B1B1B] hover:text-[#314B2C] transition-colors cursor-pointer"
+                      className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-[#1E3A1A] hover:text-[#6DBE45] transition-colors cursor-pointer"
                     >
                       <span>{faq.q}</span>
                       <span className="text-lg font-black text-slate-400">
@@ -1745,23 +1856,23 @@ export default function Landing() {
             {/* Right Still have questions box */}
             <motion.div 
               {...slideInRight}
-              className="bg-[#314B2C] text-[#F7F5EF] p-10 rounded-[32px] relative overflow-hidden flex flex-col justify-between border border-[#5D7C3F]/30 shadow-xl min-h-[350px]"
+              className="bg-gradient-to-br from-[#6DBE45] to-[#A8E6A1] text-white p-10 rounded-[32px] relative overflow-hidden flex flex-col justify-between border-none shadow-xl min-h-[350px]"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#A7C957]/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
               <div>
                 <h3 className="text-2xl font-black mb-3">Still have questions?</h3>
-                <p className="text-sm text-[#EAE4D5]/80 font-semibold mb-6">Our expert agritech team is here to help you succeed.</p>
+                <p className="text-sm text-white/95 font-semibold mb-6">Our expert agritech team is here to help you succeed.</p>
               </div>
 
               <div className="flex justify-between items-center mt-auto">
                 <button 
                   onClick={() => navigate('/login')}
-                  className="bg-[#A7C957] hover:bg-[#A7C957]/90 text-[#314B2C] font-bold text-xs px-6 py-3.5 rounded-xl transition-all cursor-pointer hover:shadow-lg hover:shadow-[#A7C957]/20"
+                  className="bg-white hover:bg-[#EAFBE7] text-[#6DBE45] font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all cursor-pointer hover:shadow-lg hover:shadow-[#6DBE45]/20"
                 >
                   Contact Support
                 </button>
-                <div className="w-12 h-12 rounded-2xl bg-[#5D7C3F]/30 flex items-center justify-center border border-[#5D7C3F]/30 shadow-inner">
-                  <Leaf className="w-6 h-6 text-[#A7C957]" />
+                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+                  <Leaf className="w-6 h-6 text-white" />
                 </div>
               </div>
             </motion.div>
@@ -1771,11 +1882,11 @@ export default function Landing() {
       </section>
 
       {/* 11. Bottom Banner CTA with plant icon */}
-      <section className="py-16 bg-[#F7F5EF] relative z-10 border-t border-[#EAE4D5]">
+      <section className="py-16 bg-[#F9FBF8] relative z-10 border-t border-[#CFF5C8]">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             {...fadeInScroll}
-            className="bg-[#314B2C] text-white rounded-[32px] px-8 py-12 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-xl border border-[#5D7C3F]/30"
+            className="bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] text-white rounded-[32px] px-8 py-12 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-xl border-none"
           >
             <div className="absolute right-0 top-0 w-48 h-full opacity-10 bg-white pointer-events-none filter blur-2xl" />
             
@@ -1785,20 +1896,20 @@ export default function Landing() {
               </div>
               <div>
                 <h3 className="text-xl lg:text-2xl font-black mb-1" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Ready to Transform Your Agriculture?</h3>
-                <p className="text-sm font-semibold text-[#EAE4D5]/80">Join thousands of farmers who are already growing better with AgriAI.</p>
+                <p className="text-sm font-semibold text-white/90">Join thousands of farmers who are already growing better with AgriAI.</p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3.5 w-full md:w-auto relative z-10">
               <Link 
                 to="/login"
-                className="flex-1 md:flex-none text-center bg-[#A7C957] hover:bg-[#A7C957]/90 text-[#314B2C] font-bold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02] shadow-md shadow-[#A7C957]/10"
+                className="flex-1 md:flex-none text-center bg-white hover:bg-[#EAFBE7] text-[#6DBE45] font-extrabold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02] shadow-md shadow-[#6DBE45]/10"
               >
                 Start Free Trial
               </Link>
               <button 
                 onClick={() => navigate('/login')}
-                className="flex-1 md:flex-none text-center bg-white/10 border border-[#EAE4D5]/30 hover:bg-white/20 text-[#F7F5EF] font-bold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02]"
+                className="flex-1 md:flex-none text-center bg-white/10 border border-white/30 hover:bg-white/20 text-white font-bold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02]"
               >
                 Book a Demo
               </button>
@@ -1808,10 +1919,10 @@ export default function Landing() {
       </section>
 
       {/* 12. Footer */}
-      <footer className="bg-[#131D11] text-[#EAE4D5]/70 py-20 relative z-10 border-t border-[#314B2C]">
+      <footer className="bg-[#EAFBE7] text-[#1E3A1A]/85 py-20 relative z-10 border-t border-[#CFF5C8]">
         
         {/* Subtle top gradient border line */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#314B2C] via-[#5D7C3F] to-[#A7C957]" />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#6DBE45] via-[#A8E6A1] to-[#6DBE45]" />
 
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-6 mb-12">
@@ -1819,19 +1930,19 @@ export default function Landing() {
             {/* Info Col */}
             <div className="col-span-2 md:col-span-4">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-[#314B2C] rounded-lg flex items-center justify-center text-white border border-[#5D7C3F]/30">
-                  <Leaf className="w-4 h-4 text-[#A7C957]" />
+                <div className="w-8 h-8 bg-gradient-to-r from-[#6DBE45] to-[#A8E6A1] rounded-lg flex items-center justify-center text-white border border-[#CFF5C8]/30">
+                  <Leaf className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xl font-black text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <span className="text-xl font-black text-[#1E3A1A] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   AgriAI
                 </span>
               </div>
-              <p className="text-xs font-semibold leading-relaxed max-w-xs mb-6 text-[#EAE4D5]/80">
+              <p className="text-xs font-semibold leading-relaxed max-w-xs mb-6 text-[#1E3A1A]/75">
                 Empowering farmers with AI technology for a sustainable, high-yield future.
               </p>
               <div className="flex gap-4">
                 {['f', 't', 'in', 'yt'].map((s, idx) => (
-                  <span key={idx} className="w-8 h-8 rounded-lg bg-[#1B2A18] flex items-center justify-center text-xs font-black text-[#EAE4D5] cursor-pointer hover:bg-[#5D7C3F] hover:text-white hover:scale-110 transition-all border border-[#314B2C]">
+                  <span key={idx} className="w-8 h-8 rounded-lg bg-white border border-[#CFF5C8] flex items-center justify-center text-xs font-black text-[#1E3A1A] cursor-pointer hover:bg-[#6DBE45] hover:text-white hover:scale-110 transition-all">
                     {s}
                   </span>
                 ))}
@@ -1840,63 +1951,63 @@ export default function Landing() {
 
             {/* Newsletter input layout */}
             <div className="col-span-2 md:col-span-4 md:order-last flex flex-col items-start">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4">Stay Connected</h4>
-              <p className="text-[11px] font-semibold mb-4 leading-relaxed text-[#EAE4D5]/80">Subscribe to our newsletter for latest agricultural insights.</p>
-              <div className="flex w-full max-w-sm rounded-xl overflow-hidden border border-[#314B2C] bg-[#1B2A18] focus-within:border-[#5D7C3F] transition-colors">
+              <h4 className="text-xs font-black text-[#1E3A1A] uppercase tracking-wider mb-4">Stay Connected</h4>
+              <p className="text-[11px] font-semibold mb-4 leading-relaxed text-[#1E3A1A]/70">Subscribe to our newsletter for latest agricultural insights.</p>
+              <div className="flex w-full max-w-sm rounded-xl overflow-hidden border border-[#CFF5C8] bg-white focus-within:border-[#6DBE45] transition-colors">
                 <input 
                   type="email" 
                   placeholder="Enter your email" 
-                  className="flex-grow bg-transparent px-4 py-2.5 text-xs text-[#EAE4D5] outline-none placeholder-[#EAE4D5]/40 font-semibold"
+                  className="flex-grow bg-transparent px-4 py-2.5 text-xs text-[#1E3A1A] outline-none placeholder-[#1E3A1A]/40 font-semibold"
                 />
-                <button className="bg-[#5D7C3F] hover:bg-[#5D7C3F]/90 text-white px-4 flex items-center justify-center transition-colors cursor-pointer">
-                  <Send className="w-4 h-4 text-[#F7F5EF]" />
+                <button className="bg-[#6DBE45] hover:bg-[#5da539] text-white px-4 flex items-center justify-center transition-colors cursor-pointer border-none">
+                  <Send className="w-4 h-4 text-white" />
                 </button>
               </div>
             </div>
 
             {/* Links Col 1 */}
             <div className="col-span-1 md:col-span-1.5">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4">Product</h4>
-              <ul className="space-y-2.5 text-xs font-bold">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Updates</a></li>
+              <h4 className="text-xs font-black text-[#1E3A1A] uppercase tracking-wider mb-4">Product</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#1E3A1A]/70">
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Integrations</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Updates</a></li>
               </ul>
             </div>
 
             {/* Links Col 2 */}
             <div className="col-span-1 md:col-span-1.5">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4">Solutions</h4>
-              <ul className="space-y-2.5 text-xs font-bold">
-                <li><a href="#" className="hover:text-white transition-colors">Crop Management</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Farm Operations</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Financials</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Analytics</a></li>
+              <h4 className="text-xs font-black text-[#1E3A1A] uppercase tracking-wider mb-4">Solutions</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#1E3A1A]/70">
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Crop Management</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Farm Operations</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Financials</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Analytics</a></li>
               </ul>
             </div>
 
             {/* Links Col 3 */}
             <div className="col-span-1 md:col-span-1">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider mb-4">Company</h4>
-              <ul className="space-y-2.5 text-xs font-bold">
-                <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+              <h4 className="text-xs font-black text-[#1E3A1A] uppercase tracking-wider mb-4">Company</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#1E3A1A]/70">
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-[#6DBE45] transition-colors">Blog</a></li>
               </ul>
             </div>
 
           </div>
 
-          <div className="h-px bg-[#314B2C] mb-8" />
+          <div className="h-px bg-[#CFF5C8] mb-8" />
 
           {/* Bottom links */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#1E3A1A]/70">
             <p>© 2026 AgriAI. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">Cookie Policy</a>
+              <a href="#" className="hover:text-[#6DBE45] transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-[#6DBE45] transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-[#6DBE45] transition-colors">Cookie Policy</a>
             </div>
           </div>
 
