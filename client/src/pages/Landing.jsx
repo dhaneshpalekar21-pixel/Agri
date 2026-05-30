@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import Lenis from 'lenis';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts';
 import {
   Leaf,
   Sprout,
@@ -30,6 +31,35 @@ import {
   Search,
   Bell
 } from 'lucide-react';
+
+function RollingNumber({ value, className = "" }) {
+  const valueString = String(value);
+  return (
+    <span className={`inline-flex items-center select-none ${className}`}>
+      {valueString.split('').map((char, index) => {
+        if (isNaN(parseInt(char, 10))) {
+          return <span key={index} className="inline-block">{char}</span>;
+        }
+        return (
+          <span key={index} className="relative h-[1.1em] w-[0.62em] inline-block overflow-hidden">
+            <AnimatePresence mode="popLayout">
+              <motion.span
+                key={char}
+                initial={{ y: '100%' }}
+                animate={{ y: '0%' }}
+                exit={{ y: '-100%' }}
+                transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                {char}
+              </motion.span>
+            </AnimatePresence>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -198,8 +228,21 @@ export default function Landing() {
   const [dashboardData, setDashboardData] = useState({
     revenue: 14845,
     activeFields: 18,
-    cropHealth: 84,
+    cropHealth: 94,
     yieldData: [40, 50, 45, 65, 75, 90],
+    soilMoisture: 42,
+    waterUsage: 1250,
+    temperature: 28,
+    humidity: 64,
+    rainfall: 12,
+    forecastChartData: [
+      { name: 'Jun', yield: 4.2, baseline: 3.8 },
+      { name: 'Jul', yield: 4.8, baseline: 3.9 },
+      { name: 'Aug', yield: 5.1, baseline: 4.0 },
+      { name: 'Sep', yield: 5.9, baseline: 4.1 },
+      { name: 'Oct', yield: 6.4, baseline: 4.2 },
+      { name: 'Nov', yield: 7.2, baseline: 4.3 }
+    ],
     recentActivities: [
       { id: 1, type: "Irrigation completed", field: "Field A1", time: "2h ago" },
       { id: 2, type: "Fertilizer applied", field: "Field B3", time: "5h ago" }
@@ -214,27 +257,45 @@ export default function Landing() {
   useEffect(() => {
     const interval = setInterval(() => {
       setDashboardData(prev => {
-        // Increment revenue slowly with occasional fluctuations
-        const nextRevenue = prev.revenue + Math.floor(Math.random() * 25) - 5;
+        // Increment revenue slowly and steadily
+        const nextRevenue = prev.revenue + Math.floor(Math.random() * 3) + 1;
         
         // Active fields can fluctuate slightly
         let nextFieldsCount = prev.activeFields;
-        if (Math.random() < 0.2) {
+        if (Math.random() < 0.1) {
           nextFieldsCount = Math.max(15, Math.min(20, prev.activeFields + (Math.random() > 0.5 ? 1 : -1)));
         }
 
-        // Crop health fluctuates organically between 80% and 95%
+        // Crop health fluctuates organically between 92% and 96%
         let nextHealth = prev.cropHealth + (Math.random() > 0.5 ? 1 : -1);
-        if (nextHealth > 95) nextHealth = 95;
-        if (nextHealth < 80) nextHealth = 80;
+        if (nextHealth > 96) nextHealth = 96;
+        if (nextHealth < 92) nextHealth = 92;
 
         // Shift yield chart values slightly
         const nextYield = prev.yieldData.map(h => {
-          let change = Math.floor(Math.random() * 11) - 5; // -5 to +5
+          let change = Math.floor(Math.random() * 5) - 2; // -2 to +2
           let newH = h + change;
           if (newH > 95) newH = 95;
           if (newH < 20) newH = 20;
           return newH;
+        });
+
+        // Fluctuate soil moisture, temp, humidity, rainfall, and water usage
+        const nextSoilMoisture = Math.max(38, Math.min(48, prev.soilMoisture + (Math.random() > 0.5 ? 1 : -1)));
+        const nextWaterUsage = prev.waterUsage + Math.floor(Math.random() * 4) + 1;
+        
+        // Weather changes slowly and naturally (15% chance per second)
+        const nextTemp = Math.random() < 0.15 ? Math.max(26, Math.min(32, prev.temperature + (Math.random() > 0.5 ? 1 : -1))) : prev.temperature;
+        const nextHumidity = Math.random() < 0.15 ? Math.max(58, Math.min(70, prev.humidity + (Math.random() > 0.5 ? 1 : -1))) : prev.humidity;
+        const nextRainfall = Math.random() < 0.1 ? Math.max(8, Math.min(18, prev.rainfall + (Math.random() > 0.5 ? 1 : -1))) : prev.rainfall;
+
+        // Shift Recharts crop yield forecast line data slightly
+        const nextForecastChartData = prev.forecastChartData.map(d => {
+          const change = (Math.random() - 0.5) * 0.12;
+          let newYield = Number((d.yield + change).toFixed(2));
+          if (newYield < d.baseline - 0.1) newYield = d.baseline - 0.1;
+          if (newYield > d.baseline + 3.8) newYield = d.baseline + 3.8;
+          return { ...d, yield: newYield };
         });
 
         // Rotate recent activities
@@ -283,11 +344,17 @@ export default function Landing() {
           activeFields: nextFieldsCount,
           cropHealth: nextHealth,
           yieldData: nextYield,
+          soilMoisture: nextSoilMoisture,
+          waterUsage: nextWaterUsage,
+          temperature: nextTemp,
+          humidity: nextHumidity,
+          rainfall: nextRainfall,
+          forecastChartData: nextForecastChartData,
           recentActivities: nextActivities,
           fields: nextFieldsStatus
         };
       });
-    }, 2500);
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -445,12 +512,12 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FBF8] text-[#1B1B1B] font-sans selection:bg-[#16A34A] selection:text-white relative overflow-x-clip">
+    <div className="min-h-screen bg-[#F9FBF8] text-[#1B1B1B] font-sans selection:bg-[#236625] selection:text-white relative overflow-x-clip">
       
       {/* Background Floating Blurred Gradient Orbs */}
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#16A34A]/12 blur-[120px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '8s' }} />
-      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#4ADE80]/12 blur-[150px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '12s' }} />
-      <div className="absolute bottom-[15%] left-[5%] w-[450px] h-[450px] rounded-full bg-[#16A34A]/8 blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '10s' }} />
+      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#236625]/12 blur-[120px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '8s' }} />
+      <div className="absolute top-[40%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#2E7D32]/12 blur-[150px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '12s' }} />
+      <div className="absolute bottom-[15%] left-[5%] w-[450px] h-[450px] rounded-full bg-[#236625]/8 blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '10s' }} />
 
       {/* Floating Global Leaf & Sprout Objects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-30">
@@ -462,7 +529,7 @@ export default function Landing() {
             x: [0, 10, 0]
           }}
           transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }}
-          className="absolute top-[12%] left-[8%] text-[#16A34A]/20 w-9 h-9"
+          className="absolute top-[12%] left-[8%] text-[#236625]/20 w-9 h-9"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -474,7 +541,7 @@ export default function Landing() {
             x: [0, -15, 0]
           }}
           transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-          className="absolute top-[28%] right-[10%] text-[#4ADE80]/20 w-11 h-11"
+          className="absolute top-[28%] right-[10%] text-[#2E7D32]/20 w-11 h-11"
         >
           <Leaf className="w-full h-full transform -rotate-45" />
         </motion.div>
@@ -486,7 +553,7 @@ export default function Landing() {
             x: [0, 12, 0]
           }}
           transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }}
-          className="absolute top-[55%] left-[5%] text-[#16A34A]/20 w-8 h-8"
+          className="absolute top-[55%] left-[5%] text-[#236625]/20 w-8 h-8"
         >
           <Sprout className="w-full h-full" />
         </motion.div>
@@ -498,7 +565,7 @@ export default function Landing() {
             x: [0, -8, 0]
           }}
           transition={{ repeat: Infinity, duration: 11, ease: "easeInOut" }}
-          className="absolute top-[72%] right-[8%] text-[#16A34A]/20 w-10 h-10"
+          className="absolute top-[72%] right-[8%] text-[#236625]/20 w-10 h-10"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -510,7 +577,7 @@ export default function Landing() {
             x: [0, 10, 0]
           }}
           transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }}
-          className="absolute top-[88%] left-[12%] text-[#4ADE80]/20 w-9 h-9"
+          className="absolute top-[88%] left-[12%] text-[#2E7D32]/20 w-9 h-9"
         >
           <Leaf className="w-full h-full" />
         </motion.div>
@@ -518,53 +585,53 @@ export default function Landing() {
 
       {/* 1. Fixed Glassmorphic Navbar inside wrapper */}
       <div className="h-20 z-50 relative">
-        <header className={`fixed top-0 left-0 right-0 h-20 z-50 transition-all duration-300 transform ${navbarVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-white/90 backdrop-blur-lg border-b border-[#BBF7D0]/60 shadow-[0_4px_30px_rgba(22,163,74,0.05)]' : 'bg-transparent'}`}>
+        <header className={`fixed top-0 left-0 right-0 h-20 z-50 transition-all duration-300 transform ${navbarVisible ? 'translate-y-0' : '-translate-y-full'} ${isScrolled ? 'bg-[#E8F5E9]/90 backdrop-blur-lg border-b border-[#D8EAD8]/60 shadow-[0_4px_30px_rgba(22,163,74,0.05)]' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#16A34A]/20">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#236625] to-[#2E7D32] rounded-xl flex items-center justify-center text-white shadow-lg shadow-[#236625]/20">
               <Leaf className="w-5.5 h-5.5" />
             </div>
-            <span className="text-2xl font-black text-[#14532D] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <span className="text-2xl font-black text-[#236625] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               AgriAI
             </span>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8 text-sm font-bold text-[#6B7280]">
-            <a href="#home" className={`hover:text-[#16A34A] transition-colors py-1 relative ${activeSection === 'home' ? 'text-[#16A34A]' : ''}`}>
+            <a href="#home" className={`hover:text-[#236625] transition-colors py-1 relative ${activeSection === 'home' ? 'text-[#236625]' : ''}`}>
               Home
-              {activeSection === 'home' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16A34A] rounded-full" />}
+              {activeSection === 'home' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236625] rounded-full" />}
             </a>
-            <a href="#features" className={`hover:text-[#16A34A] transition-colors py-1 relative ${activeSection === 'features' ? 'text-[#16A34A]' : ''}`}>
+            <a href="#features" className={`hover:text-[#236625] transition-colors py-1 relative ${activeSection === 'features' ? 'text-[#236625]' : ''}`}>
               Features
-              {activeSection === 'features' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16A34A] rounded-full" />}
+              {activeSection === 'features' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236625] rounded-full" />}
             </a>
-            <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#16A34A] transition-colors py-1">
+            <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#236625] transition-colors py-1">
               <span>Solutions</span>
-              <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-[#16A34A]" />
+              <ChevronDown className="w-4 h-4 text-[#64748B]/80 group-hover:text-[#236625]" />
             </div>
-            <a href="#how-it-works" className={`hover:text-[#16A34A] transition-colors py-1 relative ${activeSection === 'how-it-works' ? 'text-[#16A34A]' : ''}`}>
+            <a href="#how-it-works" className={`hover:text-[#236625] transition-colors py-1 relative ${activeSection === 'how-it-works' ? 'text-[#236625]' : ''}`}>
               How It Works
-              {activeSection === 'how-it-works' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16A34A] rounded-full" />}
+              {activeSection === 'how-it-works' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236625] rounded-full" />}
             </a>
-            <a href="#pricing" className={`hover:text-[#16A34A] transition-colors py-1 relative ${activeSection === 'pricing' ? 'text-[#16A34A]' : ''}`}>
+            <a href="#pricing" className={`hover:text-[#236625] transition-colors py-1 relative ${activeSection === 'pricing' ? 'text-[#236625]' : ''}`}>
               Pricing
-              {activeSection === 'pricing' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16A34A] rounded-full" />}
+              {activeSection === 'pricing' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236625] rounded-full" />}
             </a>
-            <a href="#about" className={`hover:text-[#16A34A] transition-colors py-1 relative ${activeSection === 'about' ? 'text-[#16A34A]' : ''}`}>
+            <a href="#about" className={`hover:text-[#236625] transition-colors py-1 relative ${activeSection === 'about' ? 'text-[#236625]' : ''}`}>
               About Us
-              {activeSection === 'about' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#16A34A] rounded-full" />}
+              {activeSection === 'about' && <motion.div layoutId="navIndicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#236625] rounded-full" />}
             </a>
           </nav>
 
           {/* Actions */}
           <div className="hidden lg:flex items-center gap-6">
-            <Link to="/login" className="text-sm font-black text-[#6B7280] hover:text-[#16A34A] transition-colors">
+            <Link to="/login" className="text-sm font-black text-[#6B7280] hover:text-[#236625] transition-colors">
               Log In
             </Link>
             <Link 
               to="/login"
-              className="flex items-center gap-2 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] hover:from-[#15803D] hover:to-[#22C55E] text-white px-5.5 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#16A34A]/10 transition-all hover:scale-[1.02] cursor-pointer"
+              className="flex items-center gap-2 bg-gradient-to-r from-[#236625] to-[#2E7D32] hover:from-[#1B521D] hover:to-[#1B521D] text-white px-5.5 py-3 rounded-xl font-bold text-sm shadow-md shadow-[#236625]/10 transition-all hover:scale-[1.02] cursor-pointer"
             >
               <span>Get Started Free</span>
               <ArrowRight className="w-4 h-4" />
@@ -574,7 +641,7 @@ export default function Landing() {
           {/* Mobile menu trigger */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            className="lg:hidden p-2 text-[#6B7280] hover:text-[#14532D] transition-colors"
+            className="lg:hidden p-2 text-[#6B7280] hover:text-[#236625] transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -587,19 +654,19 @@ export default function Landing() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-white/95 backdrop-blur-md border-b border-[#BBF7D0] overflow-hidden"
+              className="lg:hidden bg-[#E8F5E9]/95 backdrop-blur-md border-b border-[#D8EAD8] overflow-hidden"
             >
               <div className="px-6 py-6 flex flex-col gap-4 text-base font-bold text-[#1B1B1B]">
-                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#16A34A]">Features</a>
-                <span className="hover:text-[#16A34A] cursor-pointer">Solutions</span>
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#16A34A]">How It Works</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#16A34A]">Pricing</a>
-                <span className="hover:text-[#16A34A] cursor-pointer">About Us</span>
-                <div className="h-px bg-[#BBF7D0] my-2" />
-                <Link to="/login" className="hover:text-[#16A34A]">Log In</Link>
+                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#236625]">Features</a>
+                <span className="hover:text-[#236625] cursor-pointer">Solutions</span>
+                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#236625]">How It Works</a>
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-[#236625]">Pricing</a>
+                <span className="hover:text-[#236625] cursor-pointer">About Us</span>
+                <div className="h-px bg-[#D8EAD8] my-2" />
+                <Link to="/login" className="hover:text-[#236625]">Log In</Link>
                 <Link 
                   to="/login"
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] text-white py-3.5 rounded-xl font-bold transition-all text-center shadow-lg shadow-[#16A34A]/10"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-[#236625] to-[#2E7D32] text-white py-3.5 rounded-xl font-bold transition-all text-center shadow-lg shadow-[#236625]/10"
                 >
                   <span>Get Started Free</span>
                   <ArrowRight className="w-4 h-4" />
@@ -642,20 +709,20 @@ export default function Landing() {
             {/* Left Content Column with premium organic glassmorphic panel */}
             <motion.div 
               {...fadeInScroll}
-              className="lg:col-span-6 flex flex-col items-start bg-white/75 backdrop-blur-md border border-[#BBF7D0] p-8 sm:p-10 rounded-[32px] shadow-2xl relative overflow-hidden"
+              className="lg:col-span-6 flex flex-col items-start bg-[#E8F5E9]/75 backdrop-blur-md border border-[#D8EAD8] p-8 sm:p-10 rounded-[32px] shadow-2xl relative overflow-hidden"
             >
               {/* Premium background animated glow inside the card */}
-              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#16A34A]/12 rounded-full blur-3xl animate-pulse pointer-events-none" />
+              <div className="absolute -top-16 -right-16 w-48 h-48 bg-[#236625]/12 rounded-full blur-3xl animate-pulse pointer-events-none" />
 
-              <div className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#14532D] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm border border-[#BBF7D0]/60 relative z-10">
-                <Sparkles className="w-3.5 h-3.5 text-[#16A34A] animate-spin" style={{ animationDuration: '3s' }} />
+              <div className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm border border-[#D8EAD8]/60 relative z-10">
+                <Sparkles className="w-3.5 h-3.5 text-[#236625] animate-spin" style={{ animationDuration: '3s' }} />
                 <span>AI-Powered Agriculture</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl xl:text-6.5xl font-black text-[#1B1B1B] tracking-tight leading-[1.08] mb-6 relative z-10" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Smart Agriculture <br />
                 Management <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#14532D] to-[#16A34A] filter drop-shadow-sm">Powered by AI</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#236625] to-[#236625] filter drop-shadow-sm">Powered by AI</span>
               </h1>
               
               <p className="text-base sm:text-lg text-[#6B7280] font-semibold leading-relaxed max-w-xl mb-8 relative z-10">
@@ -666,39 +733,39 @@ export default function Landing() {
               <div className="flex flex-wrap gap-4 w-full sm:w-auto mb-8 relative z-10">
                 <Link 
                   to="/login"
-                  className="flex-grow sm:flex-grow-0 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] hover:from-[#15803D] hover:to-[#22C55E] text-white px-8 py-4.5 rounded-xl font-bold text-center shadow-lg shadow-[#16A34A]/15 hover:scale-[1.03] transition-all cursor-pointer"
+                  className="flex-grow sm:flex-grow-0 bg-gradient-to-r from-[#236625] to-[#2E7D32] hover:from-[#1B521D] hover:to-[#1B521D] text-white px-8 py-4.5 rounded-xl font-bold text-center shadow-lg shadow-[#236625]/15 hover:scale-[1.03] transition-all cursor-pointer"
                 >
                   Start Free Trial
                 </Link>
                 <button 
                   onClick={() => navigate('/login')}
-                  className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2.5 bg-white/70 backdrop-blur-sm border border-[#BBF7D0] text-[#14532D] px-8 py-4.5 rounded-xl font-bold hover:bg-white hover:scale-[1.03] transition-all shadow-sm cursor-pointer"
+                  className="flex-grow sm:flex-grow-0 flex items-center justify-center gap-2.5 bg-[#E8F5E9]/70 backdrop-blur-sm border border-[#D8EAD8] text-[#236625] px-8 py-4.5 rounded-xl font-bold hover:bg-[#E8F5E9] hover:scale-[1.03] transition-all shadow-sm cursor-pointer"
                 >
-                  <Play className="w-4.5 h-4.5 text-[#16A34A] fill-[#16A34A]" />
+                  <Play className="w-4.5 h-4.5 text-[#236625] fill-[#236625]" />
                   <span>Watch Demo</span>
                 </button>
               </div>
 
               {/* Sub features indicators list */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-black text-[#6B7280] uppercase tracking-wide border-t border-[#BBF7D0] pt-6 w-full relative z-10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-black text-[#6B7280] uppercase tracking-wide border-t border-[#D8EAD8] pt-6 w-full relative z-10">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#236625]" />
                   <div>
-                    <p className="font-black text-[#14532D]">14-Day Free Trial</p>
+                    <p className="font-black text-[#236625]">14-Day Free Trial</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">No credit card</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#236625]" />
                   <div>
-                    <p className="font-black text-[#14532D]">Cancel Anytime</p>
+                    <p className="font-black text-[#236625]">Cancel Anytime</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">No hassle</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                  <CheckCircle2 className="w-5 h-5 text-[#236625]" />
                   <div>
-                    <p className="font-black text-[#14532D]">Secure Data</p>
+                    <p className="font-black text-[#236625]">Secure Data</p>
                     <p className="text-[10px] text-[#6B7280] font-bold lowercase">Your data is safe</p>
                   </div>
                 </div>
@@ -728,150 +795,268 @@ export default function Landing() {
             {/* Right Dashboard Mockup Column */}
             <motion.div 
               {...slideInRight}
-              className="lg:col-span-6 relative z-10"
+              className="lg:col-span-6 z-10"
             >
-              {/* Floating Widget 1 */}
-              <motion.div 
-                animate={{ y: [0, -10, 0] }}
-                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="absolute -top-6 -left-6 z-25 bg-white border border-[#BBF7D0] p-3.5 rounded-2xl shadow-[0_10px_30px_rgba(22,163,74,0.06)] flex items-center gap-3"
-              >
-                <div className="w-9 h-9 rounded-xl bg-[#F0FDF4] flex items-center justify-center text-[#16A34A]">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase font-black text-[#6B7280]">AI Yield Forecast</p>
-                  <p className="text-xs font-black text-[#14532D]">+28% efficiency boost</p>
-                </div>
-              </motion.div>
-              {/* Floating Widget 2 */}
-              <motion.div 
-                animate={{ y: [0, 8, 0] }}
-                transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
-                className="absolute -bottom-6 -right-4 z-25 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] p-4 rounded-2xl border border-[#BBF7D0]/20 shadow-[0_10px_35px_rgba(22,163,74,0.15)] flex items-center gap-3.5 text-white"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[9px] uppercase font-black text-white/80">Weather Alert</p>
-                  <p className="text-xs font-bold text-white">Optimal watering window</p>
-                </div>
-              </motion.div>
-
-              {/* Premium Dashboard UI Mockup */}
-              <div className="w-full max-w-xl mx-auto bg-white/80 rounded-[24px] shadow-2xl border border-[#BBF7D0] backdrop-blur-sm overflow-hidden hover:shadow-[#16A34A]/5 hover:border-[#16A34A]/40 transition-all duration-500">
-                <div className="h-10 bg-[#F0FDF4] px-4 flex items-center justify-between border-b border-[#BBF7D0]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#14532D]/20" />
-                    <div className="w-3 h-3 rounded-full bg-[#14532D]/20" />
-                    <div className="w-3 h-3 rounded-full bg-[#14532D]/20" />
+              <div className="relative max-w-xl mx-auto">
+                {/* Floating Widget 1 */}
+                <motion.div 
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  style={{ top: '-48px', right: '20px' }}
+                  className="absolute z-25 bg-[#E8F5E9] border border-[#D8EAD8] p-3.5 rounded-2xl shadow-[0_10px_30px_rgba(22,163,74,0.06)] flex items-center gap-3 hidden sm:flex w-max"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] flex items-center justify-center text-[#236625]">
+                    <Sparkles className="w-5 h-5" />
                   </div>
-                  <span className="text-xs text-[#14532D]/50 font-bold">dashboard.agriai.com</span>
+                  <div>
+                    <p className="text-[9px] uppercase font-black text-[#6B7280]">AI Yield Forecast</p>
+                    <p className="text-xs font-black text-[#236625]">+28% efficiency boost</p>
+                  </div>
+                </motion.div>
+                {/* Floating Widget 2 */}
+                <motion.div 
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ repeat: Infinity, duration: 4.5, ease: "easeInOut" }}
+                  style={{ bottom: '-60px', right: '20px' }}
+                  className="absolute z-25 bg-gradient-to-r from-[#236625] to-[#2E7D32] p-4 rounded-2xl border border-[#D8EAD8]/20 shadow-[0_10px_35px_rgba(22,163,74,0.15)] flex items-center gap-3.5 text-white hidden sm:flex w-max"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-[#E8F5E9]/20 flex items-center justify-center text-white">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-black text-white/80">Weather Alert</p>
+                    <p className="text-xs font-bold text-white">Optimal watering window</p>
+                  </div>
+                </motion.div>
+
+                {/* Premium Dashboard UI Mockup */}
+                <div className="w-full bg-[#E8F5E9]/80 rounded-[24px] shadow-2xl border border-[#D8EAD8] backdrop-blur-sm overflow-hidden hover:shadow-[#236625]/5 hover:border-[#236625]/40 transition-all duration-500">
+                <div className="h-10 bg-[#E8F5E9] px-4 flex items-center justify-between border-b border-[#D8EAD8]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-[#236625]/20" />
+                    <div className="w-3 h-3 rounded-full bg-[#236625]/20" />
+                    <div className="w-3 h-3 rounded-full bg-[#236625]/20" />
+                  </div>
                   <div className="w-4" />
                 </div>
-                <div className="p-6 bg-white text-[#4A5568]">
+                <div className="p-6 bg-[#E8F5E9] text-[#4A5568]">
                   
-                  {/* Dashboard Header */}
-                  <div className="flex justify-between items-center mb-6">
-                    <div>
-                      <h3 className="text-lg font-bold text-[#14532D]">Dashboard</h3>
-                      <p className="text-xs text-[#6B7280]">Overview of your farm operations.</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <div className="w-8 h-8 rounded-full bg-[#F0FDF4] flex items-center justify-center text-[#14532D] cursor-pointer"><Search size={14} /></div>
-                      <div className="w-8 h-8 rounded-full bg-[#F0FDF4] flex items-center justify-center text-[#14532D] cursor-pointer"><Bell size={14} /></div>
-                    </div>
-                  </div>
-
-                  {/* Cards Row */}
-                  <div className="grid grid-cols-3 gap-3 mb-6">
-                    <div className="bg-[#F0FDF4]/80 p-3.5 rounded-xl border border-[#BBF7D0]/50 hover:border-[#16A34A]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Total Revenue</p>
-                      <h4 className="text-base font-black text-[#14532D] mt-1">
-                        ₹{dashboardData.revenue.toLocaleString('en-IN')}
-                      </h4>
-                      <span className="text-[9px] text-[#16A34A] font-semibold transition-opacity duration-300">
-                        +{((dashboardData.revenue - 13195) / 13195 * 100).toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="bg-[#F0FDF4]/80 p-3.5 rounded-xl border border-[#BBF7D0]/50 hover:border-[#16A34A]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Active Fields</p>
-                      <h4 className="text-base font-black text-[#14532D] mt-1">
-                        {dashboardData.activeFields}/20
-                      </h4>
-                      <span className="text-[9px] text-[#6B7280]/80 font-semibold">
-                        {20 - dashboardData.activeFields} left
-                      </span>
-                    </div>
-                    <div className="bg-[#F0FDF4]/80 p-3.5 rounded-xl border border-[#BBF7D0]/50 hover:border-[#16A34A]/30 transition-colors">
-                      <p className="text-[10px] uppercase font-bold text-[#6B7280]">Crop Health</p>
-                      <h4 className="text-base font-black text-[#14532D] mt-1">
-                        {dashboardData.cropHealth}%
-                      </h4>
-                      <span className={`text-[9px] font-semibold transition-colors duration-300 ${
-                        dashboardData.cropHealth >= 88 ? 'text-[#16A34A]' : 'text-amber-500'
-                      }`}>
-                        {dashboardData.cropHealth >= 88 ? 'Excellent' : 'Good'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Chart and Activity */}
-                  <div className="grid grid-cols-5 gap-3">
-                    <div className="col-span-3 bg-[#F0FDF4]/80 p-4 rounded-xl border border-[#BBF7D0]/50">
-                      <p className="text-[10px] uppercase font-bold text-[#6B7280] mb-2">Yield Prediction</p>
-                      <div className="h-28 flex items-end justify-between gap-1 pt-2">
-                        {dashboardData.yieldData.map((h, i) => (
-                          <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-                            <motion.div 
-                              animate={{ height: `${h}%` }}
-                              transition={{ type: "spring", stiffness: 60, damping: 15 }}
-                              className="w-full bg-[#16A34A] rounded-t shadow-[0_0_10px_rgba(22,163,74,0.15)]" 
-                            />
-                            <span className="text-[8px] text-[#6B7280]/50">M{i+1}</span>
-                          </div>
-                        ))}
+                  {/* Dashboard Header & Weather */}
+                  <div className="flex justify-end items-center mb-5">
+                    {/* Mini Weather Analytics Card */}
+                    <div className="bg-[#E8F5E9] border border-[#D8EAD8]/60 rounded-xl px-3 py-1.5 flex items-center gap-3 text-[10px] font-black text-[#236625]">
+                      <div className="flex items-center gap-1">
+                        <Sun className="w-3.5 h-3.5 text-amber-500 animate-spin" style={{ animationDuration: '8s' }} />
+                        <RollingNumber value={dashboardData.temperature} />°C
+                      </div>
+                      <div className="w-px h-3 bg-[#D8EAD8]" />
+                      <div className="flex items-center gap-1">
+                        <Cloud className="w-3.5 h-3.5 text-sky-400" />
+                        <RollingNumber value={dashboardData.humidity} />% RH
+                      </div>
+                      <div className="w-px h-3 bg-[#D8EAD8]" />
+                      <div className="flex items-center gap-1">
+                        <Leaf className="w-3.5 h-3.5 text-emerald-500" />
+                        <RollingNumber value={dashboardData.rainfall} />mm Rain
                       </div>
                     </div>
-                    
-                    <div className="col-span-2 bg-[#F0FDF4]/80 p-4 rounded-xl border border-[#BBF7D0]/50 flex flex-col justify-between">
-                      <div>
-                        <p className="text-[10px] uppercase font-bold text-[#6B7280] mb-3">Recent Activities</p>
-                        <div className="space-y-3 text-[10px]">
-                          {dashboardData.recentActivities.map((act) => (
-                            <div key={act.id} className="flex gap-2 transition-all duration-500 ease-in-out">
-                              <span className="text-[#16A34A] animate-ping h-2 w-2 mt-1">●</span>
-                              <div>
-                                <p className="font-bold text-[#14532D] leading-tight">{act.type}</p>
-                                <p className="text-[#6B7280]">{act.field} • {act.time}</p>
-                              </div>
-                            </div>
-                          ))}
+                  </div>
+
+                  {/* Cards Row / Telemetry Widgets */}
+                  <div className="grid grid-cols-3 gap-3 mb-5">
+                    <div className="bg-[#E8F5E9]/80 p-3 rounded-xl border border-[#D8EAD8]/50 hover:border-[#236625]/30 transition-colors flex flex-col justify-between">
+                      <p className="text-[9px] uppercase font-black text-[#6B7280]">Total Revenue</p>
+                      <div className="flex items-center leading-none text-xl sm:text-2xl lg:text-[2rem] font-bold text-[#236625] mt-1 select-none">
+                        <span>₹<RollingNumber value={dashboardData.revenue.toLocaleString('en-IN')} /></span>
+                      </div>
+                      <span className="text-[8px] text-[#236625] font-black mt-1 block">
+                        +12.4% vs last year
+                      </span>
+                    </div>
+                    <div className="bg-[#E8F5E9]/80 p-3 rounded-xl border border-[#D8EAD8]/50 hover:border-[#236625]/30 transition-colors flex flex-col justify-between">
+                      <p className="text-[9px] uppercase font-black text-[#6B7280]">Soil Moisture</p>
+                      <div className="flex items-center leading-none text-xl sm:text-2xl lg:text-[2rem] font-bold text-[#236625] mt-1 select-none">
+                        <span><RollingNumber value={dashboardData.soilMoisture} />%</span>
+                      </div>
+                      <span className="text-[8px] text-emerald-600 font-black mt-1 block">
+                        Optimal Range
+                      </span>
+                    </div>
+                    <div className="bg-[#E8F5E9]/80 p-3 rounded-xl border border-[#D8EAD8]/50 hover:border-[#236625]/30 transition-colors flex flex-col justify-between">
+                      <p className="text-[9px] uppercase font-black text-[#6B7280]">Water Usage</p>
+                      <div className="flex items-center leading-none text-xl sm:text-2xl lg:text-[2rem] font-bold text-[#236625] mt-1 select-none">
+                        <span><RollingNumber value={dashboardData.waterUsage.toLocaleString()} /> Gal</span>
+                      </div>
+                      <span className="text-[8px] text-sky-600 font-black mt-1 block">
+                        -18% Optimized
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Chart and Circular Progress */}
+                  <div className="grid grid-cols-12 gap-3 mb-5">
+                    {/* Animated Line Chart (Yield Forecast) */}
+                    <div className="col-span-7 bg-[#E8F5E9]/80 p-4 rounded-xl border border-[#D8EAD8]/50 flex flex-col justify-between h-44">
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="text-[9px] uppercase font-black text-[#6B7280]">ML Yield Forecast (T/Acre)</p>
+                        <span className="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">Projection</span>
+                      </div>
+                      <div className="w-full h-32">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={dashboardData.forecastChartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="yieldColor" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#236625" stopOpacity={0.2}/>
+                                <stop offset="95%" stopColor="#236625" stopOpacity={0.0}/>
+                              </linearGradient>
+                            </defs>
+                            <XAxis dataKey="name" tick={{ fontSize: 8, fill: '#6B7280', fontWeight: 'bold' }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 8, fill: '#6B7280', fontWeight: 'bold' }} axisLine={false} tickLine={false} domain={[2, 9]} />
+                            <Tooltip 
+                              contentStyle={{ background: 'rgba(255, 255, 255, 0.95)', border: '1px solid #D8EAD8', borderRadius: '8px', fontSize: '9px', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} 
+                              labelStyle={{ color: '#236625' }}
+                            />
+                            <Area type="monotone" dataKey="yield" name="AI Projected" stroke="#236625" strokeWidth={2} fillOpacity={1} fill="url(#yieldColor)" />
+                            <Area type="monotone" dataKey="baseline" name="Traditional" stroke="#9CA3AF" strokeWidth={1} strokeDasharray="3 3" fillOpacity={0} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Crop Health Premium Glassmorphic Card */}
+                    <div className="col-span-5 bg-gradient-to-br from-[#236625] via-[#114022] to-[#0A2614] p-4.5 rounded-[22px] shadow-xl border border-white/10 flex flex-col items-center justify-between text-center relative overflow-hidden group select-none h-44">
+                      {/* Pulsing ambient glow */}
+                      <div className="absolute inset-0 bg-radial-gradient from-emerald-500/10 to-transparent pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+                      
+                      {/* Floating particles (ambient animation) */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full overflow-hidden pointer-events-none">
+                        <motion.div animate={{ y: [-10, 10, -10], opacity: [0.3, 0.6, 0.3] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }} className="absolute top-4 left-6 w-1 h-1 bg-emerald-400 rounded-full blur-[0.5px]" />
+                        <motion.div animate={{ y: [15, -15, 15], opacity: [0.2, 0.5, 0.2] }} transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }} className="absolute bottom-6 right-8 w-1.5 h-1.5 bg-emerald-400 rounded-full blur-[0.5px]" />
+                        <motion.div animate={{ y: [-5, 10, -5], opacity: [0.1, 0.4, 0.1] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }} className="absolute top-12 right-12 w-1 h-1 bg-emerald-300 rounded-full blur-[0.5px]" />
+                      </div>
+
+                      <div className="w-full flex justify-between items-center z-10">
+                        <span className="text-[9px] uppercase font-black text-emerald-400/80 tracking-wider">Crop Health</span>
+                        <div className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                          <span className="text-[8px] font-black text-emerald-400 tracking-wider">LIVE</span>
                         </div>
                       </div>
+
+                      <div className="flex items-center justify-center gap-3 w-full my-auto z-10">
+                        {/* Circular Progress with Gradient */}
+                        <div className="relative w-14 h-14 flex items-center justify-center flex-shrink-0">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <defs>
+                              <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#2E7D32" />
+                                <stop offset="100%" stopColor="#059669" />
+                              </linearGradient>
+                            </defs>
+                            <path
+                              className="text-white/5"
+                              strokeWidth="3.5"
+                              stroke="currentColor"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            <motion.path
+                              strokeWidth="3.5"
+                              strokeDasharray={`${dashboardData.cropHealth}, 100`}
+                              strokeLinecap="round"
+                              stroke="url(#healthGrad)"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                              animate={{ strokeDasharray: `${dashboardData.cropHealth}, 100` }}
+                              transition={{ duration: 1 }}
+                            />
+                          </svg>
+                          <div className="absolute flex flex-col items-center justify-center">
+                            <span className="text-xs font-black text-white leading-none">
+                              <RollingNumber value={dashboardData.cropHealth} />%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Real-time KPI Details */}
+                        <div className="text-left space-y-1 text-white/90 text-[8px] font-bold">
+                          <div className="flex items-center gap-1 text-emerald-400">
+                            <span>↗ Growth +12%</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-emerald-400" />
+                            <span>Disease Risk Low</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-emerald-300" />
+                            <span>Soil Excellent</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-white/60">
+                            <span className="w-1 h-1 rounded-full bg-emerald-500/50" />
+                            <span>AI Active</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="w-full border-t border-white/5 pt-1.5 mt-auto z-10 flex justify-between items-center text-[7px] text-white/40 uppercase tracking-widest font-black">
+                        <span>Systems Nominal</span>
+                        <span>v2.8</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AI Recommendation Banner */}
+                  <div className="bg-[#236625] text-white p-3 rounded-xl mb-4 flex items-center gap-3 border border-emerald-800 shadow-sm">
+                    <div className="w-7 h-7 rounded-lg bg-[#E8F5E9]/10 flex items-center justify-center text-white flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-emerald-300 animate-pulse" />
+                    </div>
+                    <div className="text-[9px] font-bold leading-relaxed text-white/95 text-left">
+                      <span className="font-black text-[#2E7D32]">AI Recommendation:</span> Soil hydration levels optimized. Scheduled Field A1 sprinkler suspension. Saving ~240 Gal water.
                     </div>
                   </div>
 
                   {/* Field Status cards */}
-                  <div className="mt-4 grid grid-cols-3 gap-3 text-[10px]">
+                  <div className="grid grid-cols-3 gap-3 text-[10px]">
                     {dashboardData.fields.map((f) => (
-                      <div key={f.id} className="bg-[#F0FDF4]/80 p-2.5 rounded-lg border border-[#BBF7D0]/50 flex justify-between items-center transition-colors duration-500">
+                      <div key={f.id} className="bg-[#E8F5E9]/80 p-2.5 rounded-lg border border-[#D8EAD8]/50 flex justify-between items-center transition-all duration-300 hover:border-[#236625]/30">
                         <div>
-                          <p className="font-black text-[#14532D]">{f.id}</p>
-                          <p className="text-[#6B7280]">{f.crop}</p>
+                          <p className="font-black text-[#236625]">{f.id}</p>
+                          <p className="text-[9px] text-[#6B7280] font-semibold">{f.crop}</p>
                         </div>
                         <span className={`${
-                          f.status === 'Healthy' ? 'bg-[#16A34A]/20 text-[#14532D]' :
+                          f.status === 'Healthy' ? 'bg-[#236625]/20 text-[#236625]' :
                           f.status === 'Moderate' ? 'bg-amber-500/20 text-amber-600' :
                           'bg-rose-500/20 text-rose-600'
-                        } px-1.5 py-0.5 rounded font-bold transition-all duration-500`}>
+                        } px-1.5 py-0.5 rounded font-black transition-all duration-500`}>
                           {f.status}
                         </span>
                       </div>
                     ))}
                   </div>
 
+                </div>
+              </div>
+
+              {/* Mobile Fallback: Place cards below dashboard in a stack on mobile screens */}
+                <div className="flex sm:hidden flex-col gap-3 mt-6 w-full">
+                  <div className="bg-[#E8F5E9] border border-[#D8EAD8] p-3.5 rounded-2xl shadow-[0_10px_30px_rgba(22,163,74,0.06)] flex items-center gap-3 w-full">
+                    <div className="w-9 h-9 rounded-xl bg-[#E8F5E9] flex items-center justify-center text-[#236625] flex-shrink-0">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[9px] uppercase font-black text-[#6B7280]">AI Yield Forecast</p>
+                      <p className="text-xs font-black text-[#236625]">+28% efficiency boost</p>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-[#236625] to-[#2E7D32] p-4 rounded-2xl border border-[#D8EAD8]/20 shadow-[0_10px_35px_rgba(22,163,74,0.15)] flex items-center gap-3.5 text-white w-full">
+                    <div className="w-10 h-10 rounded-xl bg-[#E8F5E9]/20 flex items-center justify-center text-white flex-shrink-0">
+                      <Activity className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[9px] uppercase font-black text-white/80">Weather Alert</p>
+                      <p className="text-xs font-bold text-white">Optimal watering window</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -884,19 +1069,19 @@ export default function Landing() {
       <section 
         ref={farmingShowcaseRef} 
         id="farming-showcase" 
-        className="relative z-10 bg-gradient-to-b from-white via-[#F0FDF4] to-white text-[#1B1B1B]"
+        className="relative z-10 bg-gradient-to-b from-white via-[#E8F5E9] to-white text-[#1B1B1B]"
         style={{ height: isMobile ? 'auto' : '300vh' }}
       >
         {isMobile ? (
           <div className="py-24 px-6 max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <span className="bg-[#16A34A]/10 text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase border border-[#16A34A]/20">
+              <span className="bg-[#236625]/10 text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase border border-[#236625]/20">
                 SMART AGRICULTURE
               </span>
-              <h2 className="text-3xl font-black text-[#14532D] mt-4 tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl font-black text-[#236625] mt-4 tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Experience the Future of Modern Farming
               </h2>
-              <p className="text-slate-500 font-semibold text-sm mt-3 max-w-xl mx-auto">
+              <p className="text-[#64748B] font-semibold text-sm mt-3 max-w-xl mx-auto">
                 Discover how technology and sustainable farming combine to create smarter, more efficient agriculture.
               </p>
             </div>
@@ -930,12 +1115,12 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: false, amount: 0.15 }}
                   transition={{ duration: 0.8 }}
-                  className="w-full h-80 rounded-[24px] overflow-hidden border border-[#BBF7D0] shadow-2xl relative group"
+                  className="w-full h-80 rounded-[24px] overflow-hidden border border-[#D8EAD8] shadow-2xl relative group"
                 >
                   <img src={item.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={item.title} />
                   <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent opacity-90" />
-                  <div className="absolute bottom-6 left-6 right-6 p-5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#BBF7D0] text-[#1B1B1B]">
-                    <h4 className="text-base font-black text-[#14532D]">{item.title}</h4>
+                  <div className="absolute bottom-6 left-6 right-6 p-5 bg-[#E8F5E9]/90 backdrop-blur-md rounded-2xl border border-[#D8EAD8] text-[#1B1B1B]">
+                    <h4 className="text-base font-black text-[#236625]">{item.title}</h4>
                     <p className="text-xs text-slate-600 mt-1 font-semibold">{item.desc}</p>
                   </div>
                 </motion.div>
@@ -948,20 +1133,20 @@ export default function Landing() {
             <div className="max-w-7xl mx-auto px-6 w-full text-center mb-12 relative z-20">
               <motion.div 
                 {...fadeInScroll}
-                className="inline-flex items-center gap-2 bg-[#16A34A]/10 text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#16A34A]/20"
+                className="inline-flex items-center gap-2 bg-[#236625]/10 text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#236625]/20"
               >
                 <span>SMART AGRICULTURE</span>
               </motion.div>
               <motion.h2 
                 {...fadeInScroll}
-                className="text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight"
+                className="text-4xl lg:text-5xl font-black text-[#236625] tracking-tight"
                 style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
               >
                 Experience the Future of Modern Farming
               </motion.h2>
               <motion.p 
                 {...fadeInScroll}
-                className="text-slate-500 font-semibold text-base mt-4 max-w-2xl mx-auto"
+                className="text-[#64748B] font-semibold text-base mt-4 max-w-2xl mx-auto"
               >
                 Discover how technology and sustainable farming combine to create smarter, more efficient agriculture.
               </motion.p>
@@ -1002,12 +1187,12 @@ export default function Landing() {
                     <motion.div 
                       key={idx}
                       style={{ scale: scales[idx] }}
-                      className="w-[60vw] md:w-[45vw] h-[45vh] md:h-[50vh] flex-shrink-0 relative rounded-[32px] overflow-hidden shadow-2xl border border-[#BBF7D0] group transition-all duration-500 bg-white"
+                      className="w-[60vw] md:w-[45vw] h-[45vh] md:h-[50vh] flex-shrink-0 relative rounded-[32px] overflow-hidden shadow-2xl border border-[#D8EAD8] group transition-all duration-500 bg-[#E8F5E9]"
                     >
                       <img src={item.url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={item.title} />
                       <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-transparent to-transparent opacity-90" />
-                      <div className="absolute bottom-6 left-6 right-6 p-6 bg-white/90 backdrop-blur-md rounded-2xl border border-[#BBF7D0] text-[#1B1B1B]">
-                        <h4 className="text-lg font-black text-[#14532D]">{item.title}</h4>
+                      <div className="absolute bottom-6 left-6 right-6 p-6 bg-[#E8F5E9]/90 backdrop-blur-md rounded-2xl border border-[#D8EAD8] text-[#1B1B1B]">
+                        <h4 className="text-lg font-black text-[#236625]">{item.title}</h4>
                         <p className="text-xs text-slate-600 mt-1 font-semibold">{item.desc}</p>
                       </div>
                     </motion.div>
@@ -1017,14 +1202,14 @@ export default function Landing() {
             </div>
 
             {/* Glowing background highlights */}
-            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#16A34A]/8 rounded-full blur-[160px] pointer-events-none z-0" />
-            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#4ADE80]/8 rounded-full blur-[140px] pointer-events-none z-0" />
+            <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-[#236625]/8 rounded-full blur-[160px] pointer-events-none z-0" />
+            <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#2E7D32]/8 rounded-full blur-[140px] pointer-events-none z-0" />
           </div>
         )}
       </section>
 
       {/* 3. Stats Row */}
-      <section className="bg-gradient-to-r from-[#16A34A] to-[#86EFAC] text-[#14532D] py-20 md:py-24 border-y border-[#4ADE80]/30 relative z-10 overflow-hidden">
+      <section className="bg-gradient-to-r from-[#236625] to-[#86EFAC] text-[#236625] py-20 md:py-24 border-y border-[#2E7D32]/30 relative z-10 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             variants={staggerContainer}
@@ -1043,12 +1228,12 @@ export default function Landing() {
                 key={i} 
                 variants={staggerChild}
                 whileHover={{ scale: 1.05, y: -4 }}
-                className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl bg-white/90 border border-[#BBF7D0]/30 hover:border-[#16A34A] shadow-sm hover:shadow-md transition-all duration-300"
+                className="flex flex-col items-center justify-center p-6 sm:p-8 rounded-3xl bg-[#E8F5E9]/90 border border-[#D8EAD8]/30 hover:border-[#236625] shadow-sm hover:shadow-md transition-all duration-300"
               >
-                <span className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#16A34A] tracking-tight drop-shadow-[0_0_20px_rgba(22,163,74,0.15)]">
+                <span className="text-5xl sm:text-6xl lg:text-7xl font-black text-[#236625] tracking-tight drop-shadow-[0_0_20px_rgba(22,163,74,0.15)]">
                   {stat.num}
                 </span>
-                <span className="text-xs sm:text-sm md:text-base uppercase font-black text-[#14532D] mt-3 tracking-wider max-w-[200px] text-center leading-snug">
+                <span className="text-xs sm:text-sm md:text-base uppercase font-black text-[#236625] mt-3 tracking-wider max-w-[200px] text-center leading-snug">
                   {stat.label}
                 </span>
               </motion.div>
@@ -1064,12 +1249,12 @@ export default function Landing() {
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0]">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8]">
             <span>Powerful Features</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight mb-20"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#236625] tracking-tight mb-20"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Everything You Need to Succeed
@@ -1084,32 +1269,32 @@ export default function Landing() {
           >
             {[
               {
-                icon: <Sprout className="w-6 h-6 text-[#16A34A]" />,
+                icon: <Sprout className="w-6 h-6 text-[#236625]" />,
                 title: "Crop Management",
                 desc: "Plan, monitor, and manage your crops throughout their lifecycle."
               },
               {
-                icon: <Zap className="w-6 h-6 text-[#16A34A]" />,
+                icon: <Zap className="w-6 h-6 text-[#236625]" />,
                 title: "AI Disease Detection",
                 desc: "Detect diseases early with AI-powered image analysis."
               },
               {
-                icon: <Cloud className="w-6 h-6 text-[#16A34A]" />,
+                icon: <Cloud className="w-6 h-6 text-[#236625]" />,
                 title: "Weather Intelligence",
                 desc: "Real-time weather updates and forecasts for better planning."
               },
               {
-                icon: <Activity className="w-6 h-6 text-[#16A34A]" />,
+                icon: <Activity className="w-6 h-6 text-[#236625]" />,
                 title: "Soil Health Monitoring",
                 desc: "Monitor soil health and get personalized recommendations."
               },
               {
-                icon: <TrendingUp className="w-6 h-6 text-[#16A34A]" />,
+                icon: <TrendingUp className="w-6 h-6 text-[#236625]" />,
                 title: "Financial Management",
                 desc: "Track expenses, revenue, and profitability in real-time."
               },
               {
-                icon: <Layers className="w-6 h-6 text-[#16A34A]" />,
+                icon: <Layers className="w-6 h-6 text-[#236625]" />,
                 title: "Smart Analytics",
                 desc: "Get insights and reports to make data-driven decisions."
               }
@@ -1118,16 +1303,16 @@ export default function Landing() {
                 key={i}
                 variants={staggerChild}
                 whileHover={{ y: -8, scale: 1.01 }}
-                className={`bg-white border border-[#BBF7D0] p-10 rounded-[32px] shadow-sm text-left flex flex-col items-start group hover:border-[#16A34A] hover:bg-white hover:shadow-xl hover:shadow-[#16A34A]/5 transition-all duration-300 relative overflow-hidden ${i === 0 || i === 3 || i === 5 ? 'lg:col-span-2' : 'lg:col-span-1'}`}
+                className={`bg-[#E8F5E9] border border-[#D8EAD8] p-10 rounded-[32px] shadow-sm text-left flex flex-col items-start group hover:border-[#236625] hover:bg-[#E8F5E9] hover:shadow-xl hover:shadow-[#236625]/5 transition-all duration-300 relative overflow-hidden ${i === 0 || i === 3 || i === 5 ? 'lg:col-span-2' : 'lg:col-span-1'}`}
               >
-                <div className="w-12 h-12 rounded-xl bg-[#F0FDF4] flex items-center justify-center mb-6 group-hover:bg-[#16A34A] group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#16A34A]/20">
-                  {React.cloneElement(f.icon, { className: 'w-6 h-6 text-[#16A34A] group-hover:text-white transition-colors' })}
+                <div className="w-12 h-12 rounded-xl bg-[#E8F5E9] flex items-center justify-center mb-6 group-hover:bg-[#236625] group-hover:text-white transition-all duration-300 group-hover:shadow-lg group-hover:shadow-[#236625]/20">
+                  {React.cloneElement(f.icon, { className: 'w-6 h-6 text-[#236625] group-hover:text-white transition-colors' })}
                 </div>
-                <h3 className="text-xl font-black text-[#14532D] mb-2">{f.title}</h3>
+                <h3 className="text-xl font-black text-[#236625] mb-2">{f.title}</h3>
                 <p className="text-sm font-semibold text-[#6B7280] leading-relaxed">{f.desc}</p>
                 
                 {/* Subtle border gradient indicator on hover */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#236625] to-[#2E7D32] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </motion.div>
             ))}
           </motion.div>
@@ -1135,19 +1320,19 @@ export default function Landing() {
       </section>
 
       {/* 4.5 Cinematic Horizontal Scroll Showcase */}
-      <section ref={showcaseRef} className="relative h-auto lg:h-[180vh] bg-gradient-to-b from-[#F0FDF4] via-[#F9FBF8] to-white text-[#1B1B1B] z-20 py-16 lg:py-0">
+      <section ref={showcaseRef} className="relative h-auto lg:h-[180vh] bg-gradient-to-b from-[#E8F5E9] via-[#F9FBF8] to-white text-[#1B1B1B] z-20 py-16 lg:py-0">
         <div className="relative lg:sticky lg:top-0 lg:h-screen flex flex-col justify-center overflow-hidden">
           
           {/* Section Header */}
           <div className="max-w-7xl mx-auto px-6 mb-12 w-full z-10 text-left">
-            <div className="inline-flex items-center gap-2 bg-[#16A34A]/10 text-[#16A34A] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#16A34A]/20">
-              <Sparkles className="w-3.5 h-3.5 text-[#16A34A] animate-pulse" />
+            <div className="inline-flex items-center gap-2 bg-[#236625]/10 text-[#236625] px-4 py-2 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#236625]/20">
+              <Sparkles className="w-3.5 h-3.5 text-[#236625] animate-pulse" />
               <span>AgriAI Operations</span>
             </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-[#14532D] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            <h2 className="text-3xl sm:text-5xl font-black text-[#236625] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
               Operational Field Showcase
             </h2>
-            <p className="text-sm font-semibold text-slate-500 mt-2 max-w-2xl">
+            <p className="text-sm font-semibold text-[#64748B] mt-2 max-w-2xl">
               Scroll down to watch our smart technology orchestrating yield enhancements across farms globally.
             </p>
           </div>
@@ -1162,17 +1347,17 @@ export default function Landing() {
               <motion.div
                 key={idx}
                 whileHover={isMobile ? {} : { scale: 1.03, y: -6 }}
-                className="w-72 sm:w-80 h-[380px] rounded-2xl border border-[#BBF7D0] bg-white overflow-hidden relative group shadow-lg hover:shadow-[#16A34A]/10 hover:border-[#16A34A] transition-all duration-300 flex-shrink-0 snap-center"
+                className="w-72 sm:w-80 h-[380px] rounded-2xl border border-[#D8EAD8] bg-[#E8F5E9] overflow-hidden relative group shadow-lg hover:shadow-[#236625]/10 hover:border-[#236625] transition-all duration-300 flex-shrink-0 snap-center"
               >
                 <img src={item.url} className="w-full h-[60%] object-cover group-hover:scale-105 transition-transform duration-500" alt={item.title} loading="lazy" />
                 <div className="p-5 h-[40%] flex flex-col justify-between">
                   <div>
-                    <h3 className="text-sm font-black text-[#14532D]">{item.title}</h3>
-                    <p className="text-[10px] font-semibold text-slate-500 mt-1 leading-relaxed">{item.desc}</p>
+                    <h3 className="text-sm font-black text-[#236625]">{item.title}</h3>
+                    <p className="text-[10px] font-semibold text-[#64748B] mt-1 leading-relaxed">{item.desc}</p>
                   </div>
-                  <div className="flex justify-between items-center text-[9px] font-black text-[#16A34A] uppercase tracking-wide border-t border-[#BBF7D0]/40 pt-2">
+                  <div className="flex justify-between items-center text-[9px] font-black text-[#236625] uppercase tracking-wide border-t border-[#D8EAD8]/40 pt-2">
                     <span>{item.category}</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-[#16A34A]" />
+                    <ArrowRight className="w-3.5 h-3.5 text-[#236625]" />
                   </div>
                 </div>
               </motion.div>
@@ -1180,22 +1365,22 @@ export default function Landing() {
           </motion.div>
 
           {/* Background decorative glow in dark section */}
-          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#16A34A]/8 rounded-full blur-3xl pointer-events-none z-0" />
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[500px] h-[500px] bg-[#236625]/8 rounded-full blur-3xl pointer-events-none z-0" />
         </div>
       </section>
 
       {/* 5. How It Works - Timeline Flow */}
-      <section id="how-it-works" className="py-32 bg-[#F9FBF8] border-t border-[#BBF7D0] relative overflow-hidden z-10">
+      <section id="how-it-works" className="py-32 bg-[#F9FBF8] border-t border-[#D8EAD8] relative overflow-hidden z-10">
         <div className="absolute inset-0 opacity-[0.04] bg-cover bg-center pointer-events-none mix-blend-overlay"
              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1500937386664-56d1dfef3854?q=80&w=2000)' }} />
 
         <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0]">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8]">
             <span>How It Works</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight mb-20"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#236625] tracking-tight mb-20"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Simple Steps to Smarter Farming
@@ -1203,12 +1388,12 @@ export default function Landing() {
 
           <div className="relative">
             {/* Horizontal Timeline Connector Line with custom green layout */}
-            <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-0.5 bg-[#BBF7D0] z-0">
+            <div className="hidden lg:block absolute top-10 left-[12%] right-[12%] h-0.5 bg-[#D8EAD8] z-0">
               <motion.div 
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: false, amount: 0.5 }}
-                className="h-full bg-[#16A34A] origin-left"
+                className="h-full bg-[#236625] origin-left"
                 transition={{ duration: 1.5, ease: "easeInOut" }}
               />
             </div>
@@ -1227,10 +1412,10 @@ export default function Landing() {
                 { step: "04", title: "Improve & Grow", desc: "Take action and see measurable improvements in yield." }
               ].map((s, idx) => (
                 <motion.div key={idx} variants={staggerChild} className="flex flex-col items-center group">
-                  <div className="w-20 h-20 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#16A34A]/15 mb-5 text-xl font-black border-4 border-white group-hover:from-[#15803D] group-hover:to-[#22C55E] group-hover:scale-105 transition-all duration-300">
+                  <div className="w-20 h-20 bg-gradient-to-r from-[#236625] to-[#2E7D32] text-white rounded-full flex items-center justify-center shadow-lg shadow-[#236625]/15 mb-5 text-xl font-black border-4 border-white group-hover:from-[#1B521D] group-hover:to-[#1B521D] group-hover:scale-105 transition-all duration-300">
                     {s.step}
                   </div>
-                  <h3 className="text-lg font-black text-[#14532D] mb-2">{s.title}</h3>
+                  <h3 className="text-lg font-black text-[#236625] mb-2">{s.title}</h3>
                   <p className="text-xs font-semibold text-[#6B7280] max-w-[200px] leading-relaxed">{s.desc}</p>
                 </motion.div>
               ))}
@@ -1240,8 +1425,8 @@ export default function Landing() {
       </section>
 
       {/* 6. Intelligent Crop Health Diagnosis / Leaf Upload */}
-      <section className="py-32 bg-gradient-to-br from-[#F0FDF4] via-[#DCFCE7]/40 to-[#F0FDF4] text-[#1B1B1B] overflow-hidden relative z-10 border-t border-[#BBF7D0]">
-        <div className="absolute top-0 right-0 w-[45%] h-full opacity-10 bg-[#16A34A] filter blur-3xl pointer-events-none" />
+      <section className="py-32 bg-gradient-to-br from-[#E8F5E9] via-[#E8F5E9]/40 to-[#E8F5E9] text-[#1B1B1B] overflow-hidden relative z-10 border-t border-[#D8EAD8]">
+        <div className="absolute top-0 right-0 w-[45%] h-full opacity-10 bg-[#236625] filter blur-3xl pointer-events-none" />
         
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-center">
@@ -1251,10 +1436,10 @@ export default function Landing() {
               {...slideInLeft}
               className="lg:col-span-5"
             >
-              <div className="inline-flex items-center gap-2 bg-white/90 border border-[#BBF7D0] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm">
+              <div className="inline-flex items-center gap-2 bg-[#E8F5E9]/90 border border-[#D8EAD8] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 shadow-sm">
                 <span>AI Disease Diagnosis</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight leading-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#236625] tracking-tight leading-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Detect Problems Early. <br />Save Your Crop.
               </h2>
               <p className="text-sm sm:text-base text-[#6B7280] font-semibold leading-relaxed mb-6">
@@ -1271,7 +1456,7 @@ export default function Landing() {
                       setScanResultReady(false);
                       setUploadedImage(null);
                     }}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer ${selectedLeaf.id === leaf.id ? 'bg-[#16A34A] border-[#16A34A] text-white shadow-lg shadow-[#16A34A]/10 scale-[1.02]' : 'bg-white border-[#BBF7D0] text-[#14532D] hover:bg-[#F0FDF4]'}`}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all border cursor-pointer ${selectedLeaf.id === leaf.id ? 'bg-[#236625] border-[#236625] text-white shadow-lg shadow-[#236625]/10 scale-[1.02]' : 'bg-[#E8F5E9] border-[#D8EAD8] text-[#236625] hover:bg-[#E8F5E9]'}`}
                   >
                     {leaf.name}
                   </button>
@@ -1286,17 +1471,17 @@ export default function Landing() {
                   "Save time and increase yield"
                 ].map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3">
-                    <div className="w-5 h-5 bg-[#16A34A]/10 rounded-full flex items-center justify-center">
-                      <Check className="w-3.5 h-3.5 text-[#16A34A]" />
+                    <div className="w-5 h-5 bg-[#236625]/10 rounded-full flex items-center justify-center">
+                      <Check className="w-3.5 h-3.5 text-[#236625]" />
                     </div>
-                    <span className="text-sm font-bold text-[#14532D]">{item}</span>
+                    <span className="text-sm font-bold text-[#236625]">{item}</span>
                   </div>
                 ))}
               </div>
 
               <button 
                 onClick={startDemoScan}
-                className="flex items-center gap-2 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] hover:from-[#15803D] hover:to-[#22C55E] text-white font-extrabold px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-[#16A34A]/10 hover:scale-[1.02]"
+                className="flex items-center gap-2 bg-gradient-to-r from-[#236625] to-[#2E7D32] hover:from-[#1B521D] hover:to-[#1B521D] text-white font-extrabold px-6 py-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-[#236625]/10 hover:scale-[1.02]"
               >
                 <span>Scan {selectedLeaf.name}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -1312,7 +1497,7 @@ export default function Landing() {
               {/* Image Uploader Mockup */}
               <div 
                 onClick={startDemoScan}
-                className="bg-white rounded-[24px] border-2 border-dashed border-[#4ADE80] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#16A34A] hover:bg-[#F0FDF4]/40 transition-all duration-300 h-72 md:h-auto relative overflow-hidden shadow-sm"
+                className="bg-[#E8F5E9] rounded-[24px] border-2 border-dashed border-[#2E7D32] p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#236625] hover:bg-[#E8F5E9]/40 transition-all duration-300 h-72 md:h-auto relative overflow-hidden shadow-sm"
               >
                 {uploadedImage || isScanning ? (
                   <>
@@ -1322,29 +1507,29 @@ export default function Landing() {
                         initial={{ top: '0%' }}
                         animate={{ top: '100%' }}
                         transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
-                        className="absolute left-0 w-full h-1 bg-[#16A34A] shadow-[0_0_15px_#16A34A] z-10"
+                        className="absolute left-0 w-full h-1 bg-[#236625] shadow-[0_0_15px_#236625] z-10"
                       />
                     )}
                     <div className="absolute inset-0 bg-black/30 z-0" />
-                    <span className="relative z-10 bg-[#F0FDF4]/90 text-[#16A34A] px-3.5 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase border border-[#BBF7D0]">
+                    <span className="relative z-10 bg-[#E8F5E9]/90 text-[#236625] px-3.5 py-1.5 rounded-full text-[10px] font-black tracking-wide uppercase border border-[#D8EAD8]">
                       {isScanning ? 'Scanning Leaf...' : 'Scan Complete'}
                     </span>
                   </>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <UploadCloud className="w-12 h-12 text-[#16A34A] mb-4 animate-bounce" style={{ animationDuration: '3s' }} />
-                    <h4 className="text-sm font-black text-[#14532D] mb-1">Drag & drop or click</h4>
+                    <UploadCloud className="w-12 h-12 text-[#236625] mb-4 animate-bounce" style={{ animationDuration: '3s' }} />
+                    <h4 className="text-sm font-black text-[#236625] mb-1">Drag & drop or click</h4>
                     <p className="text-xs font-semibold text-[#6B7280] mb-4">to upload leaf photo</p>
-                    <span className="text-[10px] font-black text-[#14532D]/50 bg-[#F0FDF4] px-3 py-1 rounded-md border border-[#BBF7D0]">.JPG, .PNG up to 5MB</span>
+                    <span className="text-[10px] font-black text-[#236625]/50 bg-[#E8F5E9] px-3 py-1 rounded-md border border-[#D8EAD8]">.JPG, .PNG up to 5MB</span>
                   </div>
                 )}
               </div>
 
               {/* Diagnosis Result Card */}
-              <div className="bg-white text-[#1B1B1B] rounded-[24px] p-8 shadow-xl border border-[#BBF7D0] flex flex-col justify-between hover:border-[#16A34A]/20 transition-all">
+              <div className="bg-[#E8F5E9] text-[#1B1B1B] rounded-[24px] p-8 shadow-xl border border-[#D8EAD8] flex flex-col justify-between hover:border-[#236625]/20 transition-all">
                 <div>
                   <div className="flex justify-between items-start mb-3">
-                    <h4 className="text-[10px] uppercase font-black tracking-wider text-slate-400">Diagnosis Result</h4>
+                    <h4 className="text-[10px] uppercase font-black tracking-wider text-[#64748B]/80">Diagnosis Result</h4>
                     {scanResultReady && (
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded uppercase ${selectedLeaf.riskClass}`}>
                         {selectedLeaf.risk}
@@ -1355,34 +1540,34 @@ export default function Landing() {
                   {scanResultReady ? (
                     <div className="space-y-4">
                       <div>
-                        <p className="text-xs font-extrabold text-slate-400">Crop Health Status</p>
+                        <p className="text-xs font-extrabold text-[#64748B]/80">Crop Health Status</p>
                         <p className="text-sm font-black text-[#1B1B1B] mt-0.5">{selectedLeaf.name} - {selectedLeaf.disease}</p>
                       </div>
                       
                       <div>
-                        <div className="flex justify-between text-[11px] font-bold text-slate-700 mb-1.5">
+                        <div className="flex justify-between text-[11px] font-bold text-[#F5E6D3] mb-1.5">
                           <span>Confidence Score</span>
-                          <span className="text-[#16A34A] font-extrabold">{selectedLeaf.confidence}</span>
+                          <span className="text-[#236625] font-extrabold">{selectedLeaf.confidence}</span>
                         </div>
-                        <div className="h-2 w-full bg-[#F0FDF4] rounded-full overflow-hidden">
+                        <div className="h-2 w-full bg-[#E8F5E9] rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: selectedLeaf.confidence }}
                             transition={{ duration: 1 }}
-                            className="h-full bg-[#16A34A] rounded-full" 
+                            className="h-full bg-[#236625] rounded-full" 
                           />
                         </div>
                       </div>
                       
-                      <div className="border-t border-[#BBF7D0]/40 pt-3.5">
-                        <p className="text-[10px] font-black text-slate-400 mb-1 uppercase tracking-wide">Recommended Treatment</p>
-                        <p className="text-xs font-bold text-[#14532D] leading-relaxed">{selectedLeaf.treatment}</p>
+                      <div className="border-t border-[#D8EAD8]/40 pt-3.5">
+                        <p className="text-[10px] font-black text-[#64748B]/80 mb-1 uppercase tracking-wide">Recommended Treatment</p>
+                        <p className="text-xs font-bold text-[#236625] leading-relaxed">{selectedLeaf.treatment}</p>
                       </div>
                     </div>
                   ) : (
-                    <div className="py-12 text-center text-slate-400 flex flex-col items-center justify-center h-full">
-                      <div className="w-10 h-10 rounded-full bg-[#F9FBF8] flex items-center justify-center text-slate-400 mb-3 border border-[#BBF7D0]">?</div>
-                      <p className="text-xs font-bold text-slate-500">No diagnosis completed yet.</p>
+                    <div className="py-12 text-center text-[#64748B]/80 flex flex-col items-center justify-center h-full">
+                      <div className="w-10 h-10 rounded-full bg-[#F9FBF8] flex items-center justify-center text-[#64748B]/80 mb-3 border border-[#D8EAD8]">?</div>
+                      <p className="text-xs font-bold text-[#64748B]">No diagnosis completed yet.</p>
                       <p className="text-[10px] font-semibold mt-1">Select a leaf type and press "Scan {selectedLeaf.name}".</p>
                     </div>
                   )}
@@ -1391,7 +1576,7 @@ export default function Landing() {
                 {scanResultReady && (
                   <button 
                     onClick={() => navigate('/login')}
-                    className="w-full text-center py-3 mt-4 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] hover:from-[#15803D] hover:to-[#22C55E] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
+                    className="w-full text-center py-3 mt-4 bg-gradient-to-r from-[#236625] to-[#2E7D32] hover:from-[#1B521D] hover:to-[#1B521D] text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm hover:shadow"
                   >
                     View Details
                   </button>
@@ -1405,19 +1590,19 @@ export default function Landing() {
       </section>
 
       {/* Dynamic ROI Yield Calculator Section */}
-      <section className="py-32 bg-white relative z-10 border-t border-[#BBF7D0]">
+      <section className="py-32 bg-[#E8F5E9] relative z-10 border-t border-[#D8EAD8]">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-[#F0FDF4] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0]">
+          <div className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8]">
             <span>Dynamic ROI Calculator</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-black text-[#14532D] tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          <h2 className="text-3xl sm:text-4xl font-black text-[#236625] tracking-tight mb-4" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
             Calculate Your Farm's AI Yield Potential
           </h2>
           <p className="text-[#6B7280] font-semibold text-sm mb-12">
             Slide and adjust your farm sizes to see dynamic projections of your seasonal earnings and chemical savings.
           </p>
 
-          <div className="grid md:grid-cols-12 gap-8 items-center bg-[#F0FDF4]/70 border border-[#BBF7D0] rounded-[32px] p-8 shadow-sm text-left">
+          <div className="grid md:grid-cols-12 gap-8 items-center bg-[#E8F5E9]/70 border border-[#D8EAD8] rounded-[32px] p-8 shadow-sm text-left">
             {/* Inputs */}
             <div className="md:col-span-7 space-y-6">
               <div>
@@ -1427,7 +1612,7 @@ export default function Landing() {
                     <button
                       key={crop}
                       onClick={() => setCropType(crop)}
-                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all capitalize cursor-pointer ${cropType === crop ? 'bg-[#F0FDF4] border-[#16A34A] text-[#14532D]' : 'bg-white border-[#BBF7D0] text-[#6B7280] hover:border-[#16A34A]/45'}`}
+                      className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all capitalize cursor-pointer ${cropType === crop ? 'bg-[#E8F5E9] border-[#236625] text-[#236625]' : 'bg-[#E8F5E9] border-[#D8EAD8] text-[#6B7280] hover:border-[#236625]/45'}`}
                     >
                       {crop}
                     </button>
@@ -1438,7 +1623,7 @@ export default function Landing() {
               <div>
                 <div className="flex justify-between text-xs font-black text-[#6B7280] uppercase tracking-wider mb-2">
                   <span>Farm Size (Acres)</span>
-                  <span className="text-[#16A34A] font-black">{farmAcres} Acres</span>
+                  <span className="text-[#236625] font-black">{farmAcres} Acres</span>
                 </div>
                 <input
                   type="range"
@@ -1446,9 +1631,9 @@ export default function Landing() {
                   max="1000"
                   value={farmAcres}
                   onChange={(e) => setFarmAcres(Number(e.target.value))}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#16A34A]"
+                  className="w-full h-2 bg-[#1E293B] rounded-lg appearance-none cursor-pointer accent-[#236625]"
                 />
-                <div className="flex justify-between text-[10px] text-slate-400 font-bold mt-1.5">
+                <div className="flex justify-between text-[10px] text-[#64748B]/80 font-bold mt-1.5">
                   <span>10 Acres</span>
                   <span>500 Acres</span>
                   <span>1,000 Acres</span>
@@ -1457,13 +1642,13 @@ export default function Landing() {
             </div>
 
             {/* Dynamic Results */}
-            <div className="md:col-span-5 bg-gradient-to-br from-[#16A34A] to-[#4ADE80] text-white p-8 border border-[#BBF7D0]/10 rounded-[24px] flex flex-col gap-4 shadow-lg">
+            <div className="md:col-span-5 bg-gradient-to-br from-[#236625] to-[#2E7D32] text-white p-8 border border-[#D8EAD8]/10 rounded-[24px] flex flex-col gap-4 shadow-lg">
               <div>
                 <p className="text-[10px] font-black text-white/80 uppercase tracking-wider">Additional Revenue</p>
                 <h4 className="text-3xl font-black mt-1 text-white">₹{roi.revenue}</h4>
                 <p className="text-[9px] text-white/70 font-bold mt-0.5">Based on average crop market prices</p>
               </div>
-              <div className="h-px bg-white/20" />
+              <div className="h-px bg-[#E8F5E9]/20" />
               <div className="grid grid-cols-2 gap-4 text-xs font-bold">
                 <div>
                   <p className="text-white/80 text-[9px] uppercase tracking-wider">Fertilizer Saved</p>
@@ -1480,15 +1665,15 @@ export default function Landing() {
       </section>
 
       {/* 7. Testimonials Slider */}
-      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#BBF7D0]">
+      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#D8EAD8]">
         <div className="max-w-7xl mx-auto px-6 text-center">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0]">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8]">
             <span>What Farmers Say</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl font-black text-[#14532D] tracking-tight mb-16"
+            className="text-3xl sm:text-4xl font-black text-[#236625] tracking-tight mb-16"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Trusted by Farmers Worldwide
@@ -1496,7 +1681,7 @@ export default function Landing() {
 
           <div className="relative max-w-4xl mx-auto">
             {/* Slide animation container */}
-            <div className="overflow-hidden bg-white border border-[#BBF7D0] rounded-[32px] p-8 md:p-12 shadow-sm min-h-[220px] flex flex-col justify-between">
+            <div className="overflow-hidden bg-[#E8F5E9] border border-[#D8EAD8] rounded-[32px] p-8 md:p-12 shadow-sm min-h-[220px] flex flex-col justify-between">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={testimonialIndex}
@@ -1529,7 +1714,7 @@ export default function Landing() {
             <div className="flex justify-center items-center gap-4 mt-8">
               <button 
                 onClick={() => setTestimonialIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1))}
-                className="w-10 h-10 rounded-full bg-white border border-[#BBF7D0] text-[#1B1B1B] hover:bg-[#F0FDF4] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
+                className="w-10 h-10 rounded-full bg-[#E8F5E9] border border-[#D8EAD8] text-[#1B1B1B] hover:bg-[#E8F5E9] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -1538,7 +1723,7 @@ export default function Landing() {
               </span>
               <button 
                 onClick={() => setTestimonialIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1))}
-                className="w-10 h-10 rounded-full bg-white border border-[#BBF7D0] text-[#1B1B1B] hover:bg-[#F0FDF4] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
+                className="w-10 h-10 rounded-full bg-[#E8F5E9] border border-[#D8EAD8] text-[#1B1B1B] hover:bg-[#E8F5E9] shadow-sm flex items-center justify-center cursor-pointer hover:scale-105 transition-all"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -1549,15 +1734,15 @@ export default function Landing() {
       </section>
 
       {/* 8. Pricing Section with Toggle */}
-      <section id="pricing" className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#BBF7D0]">
+      <section id="pricing" className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#D8EAD8]">
         <div className="max-w-7xl mx-auto px-6 text-center">
           
-          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0]">
+          <motion.div {...fadeInScroll} className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8]">
             <span>Simple Pricing</span>
           </motion.div>
           <motion.h2 
             {...fadeInScroll}
-            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight mb-4"
+            className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#236625] tracking-tight mb-4"
             style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
           >
             Choose the Perfect Plan
@@ -1568,13 +1753,13 @@ export default function Landing() {
             <span className="text-xs font-black text-[#6B7280] uppercase tracking-wide">Monthly</span>
             <button 
               onClick={() => setIsYearly(!isYearly)}
-              className={`w-12 h-6.5 rounded-full p-1 flex items-center transition-colors cursor-pointer ${isYearly ? 'bg-[#16A34A]' : 'bg-[#BBF7D0]'}`}
+              className={`w-12 h-6.5 rounded-full p-1 flex items-center transition-colors cursor-pointer ${isYearly ? 'bg-[#236625]' : 'bg-[#D8EAD8]'}`}
             >
-              <div className={`w-4.5 h-4.5 rounded-full bg-white transition-transform ${isYearly ? 'translate-x-5.5' : 'translate-x-0'} shadow-sm`} />
+              <div className={`w-4.5 h-4.5 rounded-full bg-[#E8F5E9] transition-transform ${isYearly ? 'translate-x-5.5' : 'translate-x-0'} shadow-sm`} />
             </button>
-            <span className="text-xs font-black text-[#16A34A] uppercase tracking-wide flex items-center gap-1.5">
+            <span className="text-xs font-black text-[#236625] uppercase tracking-wide flex items-center gap-1.5">
               <span>Yearly</span>
-              <span className="bg-[#DCFCE7] text-[#16A34A] text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase border border-[#BBF7D0]">Save 20%</span>
+              <span className="bg-[#E8F5E9] text-[#236625] text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase border border-[#D8EAD8]">Save 20%</span>
             </span>
           </div>
 
@@ -1590,41 +1775,41 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -6 }}
-              className="bg-white rounded-[32px] p-8 border border-[#BBF7D0] hover:border-[#16A34A]/40 shadow-sm flex flex-col text-left transition-all duration-300"
+              className="bg-[#E8F5E9] rounded-[32px] p-8 border border-[#D8EAD8] hover:border-[#236625]/40 shadow-sm flex flex-col text-left transition-all duration-300"
             >
-              <h3 className="text-xl font-black text-[#14532D] mb-1">Starter</h3>
+              <h3 className="text-xl font-black text-[#236625] mb-1">Starter</h3>
               <p className="text-xs font-semibold text-[#6B7280] mb-6">Perfect for small farms</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-[#14532D]">
+                <span className="text-4xl font-black text-[#236625]">
                   ₹{isYearly ? '2,900' : '3,900'}
                 </span>
                 <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#BBF7D0]/50 mb-6" />
+              <div className="h-px bg-[#D8EAD8]/50 mb-6" />
 
-              <ul className="space-y-4 text-[#14532D] font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#236625] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Up to 10 fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Basic crop monitoring</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Weather updates</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Email support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 border border-[#BBF7D0] hover:bg-[#F0FDF4] text-[#14532D] font-bold rounded-xl text-sm transition-all cursor-pointer"
+                className="w-full text-center py-3 border border-[#D8EAD8] hover:bg-[#E8F5E9] text-[#236625] font-bold rounded-xl text-sm transition-all cursor-pointer"
               >
                 Start Free Trial
               </button>
@@ -1634,45 +1819,45 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -8, scale: 1.01 }}
-              className="bg-gradient-to-b from-[#DCFCE7]/70 via-white to-white text-[#14532D] rounded-[32px] p-8 border-2 border-[#16A34A] shadow-xl relative flex flex-col text-left transition-all duration-300"
+              className="bg-gradient-to-b from-[#E8F5E9]/70 via-white to-white text-[#236625] rounded-[32px] p-8 border-2 border-[#236625] shadow-xl relative flex flex-col text-left transition-all duration-300"
             >
-              <div className="absolute top-0 right-8 -translate-y-1/2 bg-[#16A34A] text-white text-[10px] font-black tracking-wide uppercase px-3.5 py-1 rounded-full shadow-md">
+              <div className="absolute top-0 right-8 -translate-y-1/2 bg-[#236625] text-white text-[10px] font-black tracking-wide uppercase px-3.5 py-1 rounded-full shadow-md">
                 Most Popular
               </div>
               
-              <h3 className="text-xl font-black text-[#14532D] mb-1">Professional</h3>
+              <h3 className="text-xl font-black text-[#236625] mb-1">Professional</h3>
               <p className="text-xs font-semibold text-[#6B7280] mb-6">For growing farms</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-[#14532D]">
+                <span className="text-4xl font-black text-[#236625]">
                   ₹{isYearly ? '8,000' : '10,000'}
                 </span>
                 <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#BBF7D0] mb-6" />
+              <div className="h-px bg-[#D8EAD8] mb-6" />
 
-              <ul className="space-y-4 text-[#14532D] font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#236625] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Up to 50 fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>AI disease detection</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Advanced analytics</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Priority support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] hover:from-[#15803D] hover:to-[#22C55E] text-white font-extrabold rounded-xl text-sm transition-all shadow-md shadow-[#16A34A]/15 cursor-pointer"
+                className="w-full text-center py-3 bg-gradient-to-r from-[#236625] to-[#2E7D32] hover:from-[#1B521D] hover:to-[#1B521D] text-white font-extrabold rounded-xl text-sm transition-all shadow-md shadow-[#236625]/15 cursor-pointer"
               >
                 Start Free Trial
               </button>
@@ -1682,41 +1867,41 @@ export default function Landing() {
             <motion.div 
               variants={staggerChild}
               whileHover={{ y: -6 }}
-              className="bg-white rounded-[32px] p-8 border border-[#BBF7D0] hover:border-[#16A34A]/40 shadow-sm flex flex-col text-left transition-all duration-300"
+              className="bg-[#E8F5E9] rounded-[32px] p-8 border border-[#D8EAD8] hover:border-[#236625]/40 shadow-sm flex flex-col text-left transition-all duration-300"
             >
-              <h3 className="text-xl font-black text-[#14532D] mb-1">Enterprise</h3>
+              <h3 className="text-xl font-black text-[#236625] mb-1">Enterprise</h3>
               <p className="text-xs font-semibold text-[#6B7280] mb-6">For large farms & organizations</p>
               <div className="flex items-baseline mb-6">
-                <span className="text-4xl font-black text-[#14532D]">
+                <span className="text-4xl font-black text-[#236625]">
                   ₹{isYearly ? '25,000' : '32,000'}
                 </span>
                 <span className="text-[#6B7280] text-xs font-bold ml-1">/ {isYearly ? 'year' : 'month'}</span>
               </div>
 
-              <div className="h-px bg-[#BBF7D0]/50 mb-6" />
+              <div className="h-px bg-[#D8EAD8]/50 mb-6" />
 
-              <ul className="space-y-4 text-[#14532D] font-semibold text-sm mb-8 flex-1">
+              <ul className="space-y-4 text-[#236625] font-semibold text-sm mb-8 flex-1">
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Unlimited fields</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Custom integrations</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>Advanced AI features</span>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Check className="w-4.5 h-4.5 text-[#16A34A] flex-shrink-0" />
+                  <Check className="w-4.5 h-4.5 text-[#236625] flex-shrink-0" />
                   <span>24/7 phone support</span>
                 </li>
               </ul>
 
               <button 
                 onClick={() => navigate('/login')}
-                className="w-full text-center py-3 border border-[#BBF7D0] hover:bg-[#F0FDF4] text-[#14532D] font-bold rounded-xl text-sm transition-all cursor-pointer"
+                className="w-full text-center py-3 border border-[#D8EAD8] hover:bg-[#E8F5E9] text-[#236625] font-bold rounded-xl text-sm transition-all cursor-pointer"
               >
                 Contact Sales
               </button>
@@ -1733,27 +1918,27 @@ export default function Landing() {
       </section>
 
       {/* 9. Second Stats Row */}
-      <section className="bg-gradient-to-r from-[#16A34A] to-[#86EFAC] text-[#14532D] py-20 border-y border-[#4ADE80]/30 relative z-10">
+      <section className="bg-gradient-to-r from-[#236625] to-[#86EFAC] text-[#236625] py-20 border-y border-[#2E7D32]/30 relative z-10">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 text-center">
-            <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#16A34A] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">98%</span>
-              <span className="text-xs uppercase font-black text-[#14532D] mt-2.5 tracking-wider">Prediction Accuracy</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 text-center">
+            <div className="flex flex-col items-center bg-[#E8F5E9]/90 backdrop-blur-md border border-white/50 py-10 px-6 rounded-[28px] shadow-lg shadow-emerald-950/5 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-300">
+              <span className="text-4xl md:text-5xl font-black text-[#236625] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">98%</span>
+              <span className="text-xs uppercase font-black text-[#236625] mt-2.5 tracking-wider">Prediction Accuracy</span>
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#16A34A] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">50+</span>
-              <span className="text-xs uppercase font-black text-[#14532D] mt-2.5 tracking-wider">Crops Supported</span>
+            <div className="flex flex-col items-center bg-[#E8F5E9]/90 backdrop-blur-md border border-white/50 py-10 px-6 rounded-[28px] shadow-lg shadow-emerald-950/5 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-300">
+              <span className="text-4xl md:text-5xl font-black text-[#236625] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">50+</span>
+              <span className="text-xs uppercase font-black text-[#236625] mt-2.5 tracking-wider">Crops Supported</span>
             </div>
-            <div className="flex flex-col items-center">
-              <span className="text-4xl md:text-5xl font-black text-[#16A34A] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">24/7</span>
-              <span className="text-xs uppercase font-black text-[#14532D] mt-2.5 tracking-wider">AI Support</span>
+            <div className="flex flex-col items-center bg-[#E8F5E9]/90 backdrop-blur-md border border-white/50 py-10 px-6 rounded-[28px] shadow-lg shadow-emerald-950/5 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-emerald-900/10 transition-all duration-300">
+              <span className="text-4xl md:text-5xl font-black text-[#236625] drop-shadow-[0_0_15px_rgba(22,163,74,0.15)]">24/7</span>
+              <span className="text-xs uppercase font-black text-[#236625] mt-2.5 tracking-wider">AI Support</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-32 bg-white relative overflow-hidden z-10 border-t border-[#BBF7D0]">
+      <section id="about" className="py-32 bg-[#E8F5E9] relative overflow-hidden z-10 border-t border-[#D8EAD8]">
         <div className="absolute inset-0 opacity-[0.03] bg-cover bg-center pointer-events-none mix-blend-overlay"
              style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1625246333195-78d9c38ad449?q=80&w=2070)' }} />
         
@@ -1764,10 +1949,10 @@ export default function Landing() {
               {...slideInLeft}
               className="lg:col-span-6"
             >
-              <div className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 border border-[#BBF7D0]">
+              <div className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-6 border border-[#D8EAD8]">
                 <span>About Our Software</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#14532D] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#236625] tracking-tight mb-6" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 State-of-the-Art ERP <br />
                 Built for Modern Farming
               </h2>
@@ -1784,27 +1969,27 @@ export default function Landing() {
               {...slideInRight}
               className="lg:col-span-6 grid sm:grid-cols-2 gap-6"
             >
-              <div className="bg-white p-6 rounded-3xl border border-[#BBF7D0] hover:border-[#16A34A] shadow-sm transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#F0FDF4] flex items-center justify-center text-[#16A34A] mb-4">
-                  <Sparkles className="w-5 h-5 text-[#16A34A]" />
+              <div className="bg-[#E8F5E9] p-6 rounded-3xl border border-[#D8EAD8] hover:border-[#236625] shadow-sm transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#E8F5E9] flex items-center justify-center text-[#236625] mb-4">
+                  <Sparkles className="w-5 h-5 text-[#236625]" />
                 </div>
-                <h3 className="text-base font-black text-[#14532D] mb-2">AI Diagnostics</h3>
+                <h3 className="text-base font-black text-[#236625] mb-2">AI Diagnostics</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Neural network analysis that highlights crop leaf disease markers in real-time.</p>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-[#BBF7D0] hover:border-[#16A34A] shadow-sm transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#F0FDF4] flex items-center justify-center text-[#16A34A] mb-4">
-                  <TrendingUp className="w-5 h-5 text-[#16A34A]" />
+              <div className="bg-[#E8F5E9] p-6 rounded-3xl border border-[#D8EAD8] hover:border-[#236625] shadow-sm transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#E8F5E9] flex items-center justify-center text-[#236625] mb-4">
+                  <TrendingUp className="w-5 h-5 text-[#236625]" />
                 </div>
-                <h3 className="text-base font-black text-[#14532D] mb-2">Predictive Metrics</h3>
+                <h3 className="text-base font-black text-[#236625] mb-2">Predictive Metrics</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Predict seasonal yield rates and soil water levels with extreme accuracy.</p>
               </div>
 
-              <div className="bg-white p-6 rounded-3xl border border-[#BBF7D0] hover:border-[#16A34A] shadow-sm col-span-1 sm:col-span-2 transition-all duration-300">
-                <div className="w-10 h-10 rounded-2xl bg-[#F0FDF4] flex items-center justify-center text-[#16A34A] mb-4">
-                  <Layers className="w-5 h-5 text-[#16A34A]" />
+              <div className="bg-[#E8F5E9] p-6 rounded-3xl border border-[#D8EAD8] hover:border-[#236625] shadow-sm col-span-1 sm:col-span-2 transition-all duration-300">
+                <div className="w-10 h-10 rounded-2xl bg-[#E8F5E9] flex items-center justify-center text-[#236625] mb-4">
+                  <Layers className="w-5 h-5 text-[#236625]" />
                 </div>
-                <h3 className="text-base font-black text-[#14532D] mb-2">Billing & Udhar Management</h3>
+                <h3 className="text-base font-black text-[#236625] mb-2">Billing & Udhar Management</h3>
                 <p className="text-xs font-semibold text-[#6B7280] leading-relaxed">Generate GST-compliant invoices and keep clean records of ledger accounts for local suppliers and farmers.</p>
               </div>
             </motion.div>
@@ -1813,28 +1998,28 @@ export default function Landing() {
       </section>
 
       {/* 10. Frequently Asked Questions */}
-      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#BBF7D0]">
+      <section className="py-32 bg-[#F9FBF8] relative z-10 border-t border-[#D8EAD8]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 items-stretch">
             
             {/* Left FAQ accordion */}
             <motion.div {...fadeInScroll} className="flex flex-col justify-center">
-              <div className="inline-flex items-center gap-2 bg-[#DCFCE7] text-[#16A34A] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#BBF7D0] w-fit">
+              <div className="inline-flex items-center gap-2 bg-[#E8F5E9] text-[#236625] px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide uppercase mb-4 border border-[#D8EAD8] w-fit">
                 <span>FAQ</span>
               </div>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#14532D] tracking-tight mb-8" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#236625] tracking-tight mb-8" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 Frequently Asked Questions
               </h2>
 
               <div className="space-y-4">
                 {faqs.map((faq, i) => (
-                  <div key={i} className="bg-white rounded-2xl border border-[#BBF7D0] overflow-hidden shadow-sm hover:border-[#16A34A] transition-colors">
+                  <div key={i} className="bg-[#E8F5E9] rounded-2xl border border-[#D8EAD8] overflow-hidden shadow-sm hover:border-[#236625] transition-colors">
                     <button 
                       onClick={() => setActiveFAQ(activeFAQ === i ? null : i)}
-                      className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-[#14532D] hover:text-[#16A34A] transition-colors cursor-pointer"
+                      className="w-full px-6 py-4.5 flex items-center justify-between text-left font-bold text-[#236625] hover:text-[#236625] transition-colors cursor-pointer"
                     >
                       <span>{faq.q}</span>
-                      <span className="text-lg font-black text-slate-400">
+                      <span className="text-lg font-black text-[#64748B]/80">
                         {activeFAQ === i ? '−' : '+'}
                       </span>
                     </button>
@@ -1858,9 +2043,9 @@ export default function Landing() {
             {/* Right Still have questions box */}
             <motion.div 
               {...slideInRight}
-              className="bg-gradient-to-br from-[#16A34A] to-[#4ADE80] text-white p-10 rounded-[32px] relative overflow-hidden flex flex-col justify-between border-none shadow-xl min-h-[350px]"
+              className="bg-gradient-to-br from-[#236625] to-[#2E7D32] text-white p-10 rounded-[32px] relative overflow-hidden flex flex-col justify-between border-none shadow-xl min-h-[350px]"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#E8F5E9]/10 rounded-full blur-3xl pointer-events-none" />
               <div>
                 <h3 className="text-2xl font-black mb-3">Still have questions?</h3>
                 <p className="text-sm text-white/95 font-semibold mb-6">Our expert agritech team is here to help you succeed.</p>
@@ -1869,11 +2054,11 @@ export default function Landing() {
               <div className="flex justify-between items-center mt-auto">
                 <button 
                   onClick={() => navigate('/login')}
-                  className="bg-white hover:bg-[#F0FDF4] text-[#16A34A] font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all cursor-pointer hover:shadow-lg hover:shadow-[#16A34A]/20"
+                  className="bg-[#E8F5E9] hover:bg-[#E8F5E9] text-[#236625] font-extrabold text-xs px-6 py-3.5 rounded-xl transition-all cursor-pointer hover:shadow-lg hover:shadow-[#236625]/20"
                 >
                   Contact Support
                 </button>
-                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-[#E8F5E9]/10 flex items-center justify-center border border-white/20 shadow-inner">
                   <Leaf className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -1884,16 +2069,16 @@ export default function Landing() {
       </section>
 
       {/* 11. Bottom Banner CTA with plant icon */}
-      <section className="py-16 bg-[#F9FBF8] relative z-10 border-t border-[#BBF7D0]">
+      <section className="py-16 bg-[#F9FBF8] relative z-10 border-t border-[#D8EAD8]">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             {...fadeInScroll}
-            className="bg-gradient-to-r from-[#16A34A] to-[#4ADE80] text-white rounded-[32px] px-8 py-12 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-xl border-none"
+            className="bg-gradient-to-r from-[#236625] to-[#2E7D32] text-white rounded-[32px] px-8 py-12 lg:px-16 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden shadow-xl border-none"
           >
-            <div className="absolute right-0 top-0 w-48 h-full opacity-10 bg-white pointer-events-none filter blur-2xl" />
+            <div className="absolute right-0 top-0 w-48 h-full opacity-10 bg-[#E8F5E9] pointer-events-none filter blur-2xl" />
             
             <div className="flex items-center gap-6 relative z-10">
-              <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 flex-shrink-0 shadow-lg">
+              <div className="w-16 h-16 bg-[#E8F5E9]/10 rounded-2xl flex items-center justify-center border border-white/20 flex-shrink-0 shadow-lg">
                 <img src="https://img.icons8.com/color/96/sprout.png" className="w-10 h-10 object-contain hover:scale-110 transition-transform" alt="sprout" />
               </div>
               <div>
@@ -1905,13 +2090,13 @@ export default function Landing() {
             <div className="flex flex-wrap gap-3.5 w-full md:w-auto relative z-10">
               <Link 
                 to="/login"
-                className="flex-1 md:flex-none text-center bg-white hover:bg-[#F0FDF4] text-[#16A34A] font-extrabold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02] shadow-md shadow-[#16A34A]/10"
+                className="flex-1 md:flex-none text-center bg-[#E8F5E9] hover:bg-[#E8F5E9] text-[#236625] font-extrabold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02] shadow-md shadow-[#236625]/10"
               >
                 Start Free Trial
               </Link>
               <button 
                 onClick={() => navigate('/login')}
-                className="flex-1 md:flex-none text-center bg-white/10 border border-white/30 hover:bg-white/20 text-white font-bold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02]"
+                className="flex-1 md:flex-none text-center bg-[#E8F5E9]/10 border border-white/30 hover:bg-[#E8F5E9]/20 text-white font-bold px-6 py-4 rounded-xl transition-all text-sm cursor-pointer hover:scale-[1.02]"
               >
                 Book a Demo
               </button>
@@ -1921,10 +2106,10 @@ export default function Landing() {
       </section>
 
       {/* 12. Footer */}
-      <footer className="bg-[#F0FDF4] text-[#14532D]/85 py-20 relative z-10 border-t border-[#BBF7D0]">
+      <footer className="bg-[#E8F5E9] text-[#236625]/85 py-20 relative z-10 border-t border-[#D8EAD8]">
         
         {/* Subtle top gradient border line */}
-        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#16A34A] via-[#4ADE80] to-[#16A34A]" />
+        <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#236625] via-[#2E7D32] to-[#236625]" />
 
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid grid-cols-2 md:grid-cols-12 gap-10 md:gap-6 mb-12">
@@ -1932,36 +2117,84 @@ export default function Landing() {
             {/* Info Col */}
             <div className="col-span-2 md:col-span-4">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-[#16A34A] to-[#4ADE80] rounded-lg flex items-center justify-center text-white border border-[#BBF7D0]/30">
+                <div className="w-8 h-8 bg-gradient-to-r from-[#236625] to-[#2E7D32] rounded-lg flex items-center justify-center text-white border border-[#D8EAD8]/30">
                   <Leaf className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-xl font-black text-[#14532D] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <span className="text-xl font-black text-[#236625] tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                   AgriAI
                 </span>
               </div>
-              <p className="text-xs font-semibold leading-relaxed max-w-xs mb-6 text-[#14532D]/75">
+              <p className="text-xs font-semibold leading-relaxed max-w-xs mb-6 text-[#236625]/75">
                 Empowering farmers with AI technology for a sustainable, high-yield future.
               </p>
               <div className="flex gap-4">
-                {['f', 't', 'in', 'yt'].map((s, idx) => (
-                  <span key={idx} className="w-8 h-8 rounded-lg bg-white border border-[#BBF7D0] flex items-center justify-center text-xs font-black text-[#14532D] cursor-pointer hover:bg-[#16A34A] hover:text-white hover:scale-110 transition-all">
-                    {s}
-                  </span>
+                {[
+                  {
+                    icon: (
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c4.56-.93 8-4.96 8-9.75z" />
+                      </svg>
+                    ),
+                    url: 'https://facebook.com',
+                    label: 'Facebook',
+                    hover: 'hover:bg-[#1877F2] hover:border-[#1877F2]'
+                  },
+                  {
+                    icon: (
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                      </svg>
+                    ),
+                    url: 'https://twitter.com',
+                    label: 'Twitter',
+                    hover: 'hover:bg-[#000000] hover:border-[#000000]'
+                  },
+                  {
+                    icon: (
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764 0-.973.784-1.763 1.75-1.763s1.75.79 1.75 1.763c0 .974-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+                      </svg>
+                    ),
+                    url: 'https://linkedin.com',
+                    label: 'LinkedIn',
+                    hover: 'hover:bg-[#0A66C2] hover:border-[#0A66C2]'
+                  },
+                  {
+                    icon: (
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.553 9.388.553 9.388.553s7.518 0 9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                      </svg>
+                    ),
+                    url: 'https://youtube.com',
+                    label: 'YouTube',
+                    hover: 'hover:bg-[#FF0000] hover:border-[#FF0000]'
+                  }
+                ].map((s, idx) => (
+                  <a
+                    key={idx}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={s.label}
+                    className={`w-8 h-8 rounded-lg bg-[#E8F5E9] border border-[#D8EAD8] flex items-center justify-center text-[#236625] cursor-pointer hover:text-white ${s.hover} hover:scale-110 transition-all duration-300`}
+                  >
+                    {s.icon}
+                  </a>
                 ))}
               </div>
             </div>
 
             {/* Newsletter input layout */}
             <div className="col-span-2 md:col-span-4 md:order-last flex flex-col items-start">
-              <h4 className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-4">Stay Connected</h4>
-              <p className="text-[11px] font-semibold mb-4 leading-relaxed text-[#14532D]/70">Subscribe to our newsletter for latest agricultural insights.</p>
-              <div className="flex w-full max-w-sm rounded-xl overflow-hidden border border-[#BBF7D0] bg-white focus-within:border-[#16A34A] transition-colors">
+              <h4 className="text-xs font-black text-[#236625] uppercase tracking-wider mb-4">Stay Connected</h4>
+              <p className="text-[11px] font-semibold mb-4 leading-relaxed text-[#236625]/70">Subscribe to our newsletter for latest agricultural insights.</p>
+              <div className="flex w-full max-w-sm rounded-xl overflow-hidden border border-[#D8EAD8] bg-[#E8F5E9] focus-within:border-[#236625] transition-colors">
                 <input 
                   type="email" 
                   placeholder="Enter your email" 
-                  className="flex-grow bg-transparent px-4 py-2.5 text-xs text-[#14532D] outline-none placeholder-[#14532D]/40 font-semibold"
+                  className="flex-grow bg-transparent px-4 py-2.5 text-xs text-[#236625] outline-none placeholder-[#236625]/40 font-semibold"
                 />
-                <button className="bg-[#16A34A] hover:bg-[#15803D] text-white px-4 flex items-center justify-center transition-colors cursor-pointer border-none">
+                <button className="bg-[#236625] hover:bg-[#1B521D] text-white px-4 flex items-center justify-center transition-colors cursor-pointer border-none">
                   <Send className="w-4 h-4 text-white" />
                 </button>
               </div>
@@ -1969,47 +2202,47 @@ export default function Landing() {
 
             {/* Links Col 1 */}
             <div className="col-span-1 md:col-span-1.5">
-              <h4 className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-4">Product</h4>
-              <ul className="space-y-2.5 text-xs font-bold text-[#14532D]/70">
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Integrations</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Updates</a></li>
+              <h4 className="text-xs font-black text-[#236625] uppercase tracking-wider mb-4">Product</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#236625]/70">
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Integrations</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Updates</a></li>
               </ul>
             </div>
 
             {/* Links Col 2 */}
             <div className="col-span-1 md:col-span-1.5">
-              <h4 className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-4">Solutions</h4>
-              <ul className="space-y-2.5 text-xs font-bold text-[#14532D]/70">
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Crop Management</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Farm Operations</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Financials</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Analytics</a></li>
+              <h4 className="text-xs font-black text-[#236625] uppercase tracking-wider mb-4">Solutions</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#236625]/70">
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Crop Management</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Farm Operations</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Financials</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Analytics</a></li>
               </ul>
             </div>
 
             {/* Links Col 3 */}
             <div className="col-span-1 md:col-span-1">
-              <h4 className="text-xs font-black text-[#14532D] uppercase tracking-wider mb-4">Company</h4>
-              <ul className="space-y-2.5 text-xs font-bold text-[#14532D]/70">
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Careers</a></li>
-                <li><a href="#" className="hover:text-[#16A34A] transition-colors">Blog</a></li>
+              <h4 className="text-xs font-black text-[#236625] uppercase tracking-wider mb-4">Company</h4>
+              <ul className="space-y-2.5 text-xs font-bold text-[#236625]/70">
+                <li><a href="#" className="hover:text-[#236625] transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-[#236625] transition-colors">Blog</a></li>
               </ul>
             </div>
 
           </div>
 
-          <div className="h-px bg-[#BBF7D0] mb-8" />
+          <div className="h-px bg-[#D8EAD8] mb-8" />
 
           {/* Bottom links */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#14532D]/70">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-[#236625]/70">
             <p>© 2026 AgriAI. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#" className="hover:text-[#16A34A] transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-[#16A34A] transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-[#16A34A] transition-colors">Cookie Policy</a>
+              <a href="#" className="hover:text-[#236625] transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-[#236625] transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-[#236625] transition-colors">Cookie Policy</a>
             </div>
           </div>
 

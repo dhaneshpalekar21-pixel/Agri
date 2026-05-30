@@ -4,26 +4,27 @@
 @variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-200: #bbf7d0;
+  --color-primary-50: #F8FCF8;
+  --color-primary-100: #F1F8F1;
+  --color-primary-200: #D8EAD8;
   --color-primary-300: #86efac;
-  --color-primary-400: #4ade80;
+  --color-primary-400: #55FA62;
   --color-primary-500: #22c55e;
-  --color-primary-600: #16a34a;
-  --color-primary-700: #15803d;
-  --color-primary-800: #166534;
+  --color-primary-600: #236625;
+  --color-primary-700: #2f8f2f;
+  --color-primary-800: #1b521d;
   --color-primary-900: #14532d;
 
-  --color-agro-green: #2E7D32;
-  --color-agro-light: #66BB6A;
-  --color-agro-warning: #FFA726;
-  --color-agro-error: #EF5350;
+  --color-agro-green: #236625;
+  --color-agro-light: #55FA62;
+  --color-agro-warning: #F59E0B;
+  --color-agro-error: #EF4444;
   --color-agro-dark: #1E293B;
-  --color-agro-bg: #F8FAFC;
+  --color-agro-bg: #F8FCF8;
 
   --font-heading: "Poppins", sans-serif;
   --font-body: "Inter", sans-serif;
+  --font-code: "Fira Code", monospace;
 
   /* Extended slate palette for Super Admin ERP */
   --color-slate-850: #172033;
@@ -44,7 +45,7 @@
   }
 
   body {
-    background-color: #F8FAFC;
+    background-color: #F8FCF8;
     color: #1E293B;
     margin: 0;
   }
@@ -83,11 +84,11 @@
   }
 
   .gradient-green {
-    background: linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%);
+    background: linear-gradient(135deg, #236625 0%, #2F8F2F 50%, #55FA62 100%);
   }
 
   .gradient-card {
-    background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
+    background: linear-gradient(145deg, #ffffff 0%, #F1F8F1 100%);
   }
 
   .sidebar-item {
@@ -95,7 +96,7 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.625rem 1rem;
-    border-radius: 0.625rem;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 500;
     color: #64748b;
@@ -105,28 +106,28 @@
   }
 
   .sidebar-item:hover {
-    background-color: #f0fdf4;
-    color: #2E7D32;
+    background-color: #F1F8F1;
+    color: #236625;
   }
 
   .sidebar-item.active {
-    background: linear-gradient(135deg, #2E7D32, #4CAF50);
+    background: linear-gradient(135deg, #236625, #2F8F2F);
     color: white;
-    box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    box-shadow: 0 4px 12px rgba(35, 102, 37, 0.15);
   }
 
   .kpi-card {
     background: white;
-    border-radius: 1rem;
+    border-radius: 16px;
     padding: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    box-shadow: 0 2px 8px rgba(35, 102, 37, 0.08);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: 1px solid rgba(0,0,0,0.04);
+    border: 1px solid #D8EAD8;
   }
 
   .kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+    box-shadow: 0 8px 24px rgba(35, 102, 37, 0.12);
   }
 
   .btn-primary {
@@ -135,21 +136,21 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, #2E7D32, #4CAF50);
+    background: #236625;
     color: white;
     border: none;
-    border-radius: 0.625rem;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+    box-shadow: 0 2px 8px rgba(35, 102, 37, 0.08);
     font-family: var(--font-body);
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #1B5E20, #2E7D32);
-    box-shadow: 0 4px 16px rgba(46, 125, 50, 0.4);
+    background: #2F8F2F;
+    box-shadow: 0 8px 24px rgba(35, 102, 37, 0.12);
     transform: translateY(-1px);
   }
 
@@ -164,9 +165,9 @@
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
     background: white;
-    color: #2E7D32;
-    border: 1.5px solid #2E7D32;
-    border-radius: 0.625rem;
+    color: #236625;
+    border: 1.5px solid #236625;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -175,8 +176,8 @@
   }
 
   .btn-secondary:hover {
-    background: #f0fdf4;
-    box-shadow: 0 2px 8px rgba(46, 125, 50, 0.15);
+    background: #F1F8F1;
+    box-shadow: 0 2px 8px rgba(35, 102, 37, 0.08);
   }
 
   .btn-danger {
@@ -185,10 +186,10 @@
     justify-content: center;
     gap: 0.5rem;
     padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, #EF5350, #f44336);
+    background: #EF4444;
     color: white;
     border: none;
-    border-radius: 0.625rem;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
@@ -197,15 +198,16 @@
   }
 
   .btn-danger:hover {
-    background: linear-gradient(135deg, #c62828, #EF5350);
+    background: #dc2626;
     transform: translateY(-1px);
   }
 
   .input-field {
     width: 100%;
+    height: 48px;
     padding: 0.625rem 0.875rem;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 0.625rem;
+    border: 1.5px solid #D8EAD8;
+    border-radius: 10px;
     font-size: 0.875rem;
     font-family: var(--font-body);
     color: #1E293B;
@@ -215,8 +217,8 @@
   }
 
   .input-field:focus {
-    border-color: #2E7D32;
-    box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.1);
+    border-color: #236625;
+    box-shadow: 0 0 0 3px rgba(35, 102, 37, 0.1);
   }
 
   .input-field::placeholder {
@@ -225,14 +227,14 @@
 
   .table-wrapper {
     background: white;
-    border-radius: 1rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border: 1px solid rgba(0,0,0,0.04);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(35, 102, 37, 0.08);
+    border: 1px solid #D8EAD8;
     overflow: hidden;
   }
 
   .table-header {
-    background: linear-gradient(135deg, #f8fafc, #f0fdf4);
+    background: linear-gradient(135deg, #f8fafc, #F1F8F1);
     padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
