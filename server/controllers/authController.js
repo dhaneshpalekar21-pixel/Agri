@@ -31,7 +31,7 @@ const register = async (req, res, next) => {
 
     res.status(201).json({
       token,
-      user: { _id: user._id, name: user.name, email: user.email, role: user.role, shopId: shop._id },
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role, designation: user.designation, shopId: shop._id },
     })
   } catch (err) {
     next(err)
@@ -56,7 +56,7 @@ const loginUser = async (req, res, next) => {
 
     res.json({
       token,
-      user: { _id: user._id, name: user.name, email: user.email, role: user.role, shopId: user.shopId },
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role, designation: user.designation, shopId: user.shopId },
     })
   } catch (err) {
     next(err)

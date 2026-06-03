@@ -166,39 +166,87 @@ export default function AdminDashboard() {
   }
   const { register, handleSubmit, reset } = useForm()
 
-  const onAddEmployee = (data) => {
-    setEmployees(prev => [
-      ...prev,
-      {
-        _id: Date.now().toString(),
+  const onAddEmployee = async (data) => {
+    try {
+      const { default: api } = await import('../../services/api')
+      const response = await api.post('/employees', {
         name: data.name,
+        email: data.email,
+        phone: data.phone,
         role: data.role,
-        phone: data.phone || 'N/A',
-        attendance: 0,
-        salary: Number(data.salary) || 15000,
-        status: 'active',
-        joinDate: new Date().toISOString().split('T')[0]
-      }
-    ])
-    toast.success('Employee registered successfully!')
-    setActiveItem('Employee Management', 'Manage Employees')
+        password: data.password || 'password123',
+        designation: data.role,
+        joiningDate: data.joiningDate || new Date().toISOString()
+      })
+      console.log("Employee Created:", response.data)
+      toast.success('Employee registered successfully!')
+      reset()
+      loadEmployees()
+      setActiveItem('Employee Management', 'Manage Employees')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add employee')
+    }
   }
 
-  const [employees, setEmployees] = useState([
-    { _id: 'e1', name: 'Prakash More', role: 'Sales Executive', phone: '9876001234', attendance: 24, salary: 18000, status: 'active', joinDate: '2023-01-15' },
-    { _id: 'e2', name: 'Seema Kulkarni', role: 'Finance Executive', phone: '9876002345', attendance: 22, salary: 25000, status: 'active', joinDate: '2023-03-01' },
-    { _id: 'e3', name: 'Raju Pawar', role: 'Inventory Manager', phone: '9876003456', attendance: 25, salary: 28000, status: 'active', joinDate: '2022-06-10' },
-    { _id: 'e4', name: 'Sunita Desai', role: 'Delivery Executive', phone: '9876004567', attendance: 18, salary: 14000, status: 'active', joinDate: '2023-07-20' },
-  ])
+  const [employees, setEmployees] = useState([])
+
+  const loadEmployees = async () => {
+    try {
+      const { default: api } = await import('../../services/api')
+      const res = await api.get('/employees')
+      console.log("Employees API:", res.data)
+      const uiEmployees = res.data.map(e => ({
+        _id: e._id,
+        id: e.employeeId,
+        name: e.name,
+        email: e.email,
+        phone: e.phone || 'N/A',
+        role: e.role,
+        status: e.status,
+        joinDate: e.joiningDate ? e.joiningDate.split('T')[0] : 'N/A'
+      }))
+      console.log("Visible Employees:", uiEmployees)
+      setEmployees(uiEmployees)
+    } catch (err) {
+      console.error('Failed to load employees', err)
+    }
+  }
+
 
   // --- PRODUCT MANAGEMENT STATES ---
-  const [products, setProducts] = useState([
-    { id: 'PRD-001', name: 'BT Cotton Seeds 450g', category: 'Seeds', brand: 'Mahyco', sku: 'SKU-SEED-001', description: 'High yield pest-resistant cotton seeds.', unitType: 'Packet', purchasePrice: 650, price: 740, gst: 5, stock: 45, reorderLevel: 10, expiryDate: '2026-12-31', status: 'Active', isFeatured: true, image: 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=60' },
-    { id: 'PRD-002', name: 'Urea Fertilizer 50kg', category: 'Fertilizers', brand: 'IFFCO', sku: 'SKU-FERT-002', description: 'Standard agricultural nitrogen fertilizer.', unitType: 'Bag', purchasePrice: 240, price: 290, gst: 12, stock: 3, reorderLevel: 15, expiryDate: '2027-06-30', status: 'Active', isFeatured: false, image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8edd85?w=150&auto=format&fit=crop&q=60' },
-    { id: 'PRD-003', name: 'Bayer Confidor Insecticide', category: 'Pesticides', brand: 'Bayer', sku: 'SKU-PEST-003', description: 'Highly effective systemic insecticide.', unitType: 'Bottle', purchasePrice: 780, price: 890, gst: 18, stock: 24, reorderLevel: 5, expiryDate: '2026-09-10', status: 'Active', isFeatured: true, image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=150&auto=format&fit=crop&q=60' },
-    { id: 'PRD-004', name: 'NPK 19:19:19 Fertilizer', category: 'Fertilizers', brand: 'Coromandel', sku: 'SKU-FERT-004', description: 'Water soluble balanced fertilizer.', unitType: 'Packet', purchasePrice: 70, price: 85, gst: 12, stock: 65, reorderLevel: 20, expiryDate: '2028-02-28', status: 'Active', isFeatured: false, image: 'https://images.unsplash.com/photo-1574375927938-d5a98e8edd85?w=150&auto=format&fit=crop&q=60' },
-    { id: 'PRD-005', name: 'Chlorpyrifos Liquid', category: 'Pesticides', brand: 'Syngenta', sku: 'SKU-PEST-005', description: 'Broad-spectrum organophosphate insecticide.', unitType: 'Bottle', purchasePrice: 280, price: 320, gst: 18, stock: 8, reorderLevel: 10, expiryDate: '2026-06-08', status: 'Active', isFeatured: false, image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=150&auto=format&fit=crop&q=60' }
-  ])
+  const [products, setProducts] = useState([])
+
+  const loadProducts = async () => {
+    try {
+      const { default: api } = await import('../../services/api')
+      const res = await api.get('/products')
+      const uiProducts = (res.data.products || res.data).map(p => ({
+        _id: p._id,
+        id: p.productId,
+        name: p.productName,
+        category: p.category,
+        brand: p.brand,
+        sku: p.productId,
+        description: p.description,
+        unitType: 'Packet',
+        purchasePrice: p.purchasePrice,
+        price: p.sellingPrice,
+        gst: 0,
+        stock: p.stockQuantity,
+        reorderLevel: 10,
+        expiryDate: 'N/A',
+        status: p.status,
+        isFeatured: false,
+        image: p.image || 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=60'
+      }))
+      setProducts(uiProducts)
+    } catch (err) { console.error('Failed to load products', err) }
+  }
+
+  useEffect(() => {
+    loadProducts()
+    loadEmployees()
+  }, [])
   const [productCategories, setProductCategories] = useState([
     { name: 'Seeds', status: 'Active', count: 120 },
     { name: 'Fertilizers', status: 'Active', count: 85 },
@@ -388,8 +436,8 @@ export default function AdminDashboard() {
     { id: 4, icon: UserPlus, title: 'Employee Registered', desc: 'Sunita Desai assigned to Delivery Executive role.', time: '1 day ago' },
   ]
 
-  // --- EMPLOYEE MANAGEMENT STATE ---
   const [selectedEmpProfile, setSelectedEmpProfile] = useState(null)
+  const [isEditingEmployee, setIsEditingEmployee] = useState(false)
   
   const [attendanceRecords, setAttendanceRecords] = useState([
     { _id: 'e1', name: 'Prakash More', status: 'Present', checkIn: '09:05 AM', checkOut: '06:15 PM', hours: 9.1 },
@@ -589,17 +637,42 @@ export default function AdminDashboard() {
   ]
 
   // --- ORDER MANAGEMENT STATE & DUMMY DATA ---
-  const [orders, setOrders] = useState([
-    { id: 'ORD-9081', customer: 'Suresh Patil', phone: '9876001234', address: 'Plot 45, APMC Market, Baramati', date: '2026-05-30', amount: 4500, payStatus: 'Paid', payType: 'Cash', status: 'Delivered', dateDelivered: '2026-05-30', items: [{ name: 'Urea Fertilizer 50kg', qty: 2, price: 290 }, { name: 'BT Cotton Seeds 450g', qty: 5, price: 740 }], trackingStep: 6 },
-    { id: 'ORD-9082', customer: 'Ramesh Kumar', phone: '9876002345', address: 'Village Morgaon, Pune district', date: '2026-05-30', amount: 2300, payStatus: 'Pending', payType: 'Udhari', status: 'Pending', items: [{ name: 'Bayer Confidor Insecticide', qty: 1, price: 890 }, { name: 'NPK 19:19:19 Fertilizer', qty: 16, price: 85 }], trackingStep: 1 },
-    { id: 'ORD-9083', customer: 'Anita Deshpande', phone: '9876003456', address: 'Bhigwan Road, Baramati', date: '2026-05-29', amount: 8900, payStatus: 'Paid', payType: 'UPI', status: 'Delivered', dateDelivered: '2026-05-29', items: [{ name: 'NPK 19:19:19 Fertilizer', qty: 50, price: 85 }, { name: 'Drip Irrigation Kit 1 Acre', qty: 1, price: 4650 }], trackingStep: 6 },
-    { id: 'ORD-9084', customer: 'Vijay Shinde', phone: '9876004567', address: 'Sharda Nagar, Baramati', date: '2026-05-29', amount: 1200, payStatus: 'Paid', payType: 'Debit Card', status: 'Processing', trackingStep: 3, items: [{ name: 'Chlorpyrifos Liquid', qty: 3, price: 320 }, { name: 'NPK 19:19:19 Fertilizer', qty: 2, price: 85 }] },
-    { id: 'ORD-9085', customer: 'Meena Jadhav', phone: '9876005678', address: 'Indapur Road, Baramati', date: '2026-05-28', amount: 6700, payStatus: 'Refunded', payType: 'UPI', status: 'Cancelled', cancelReason: 'Customer requested cancellation', items: [{ name: 'BT Cotton Seeds 450g', qty: 9, price: 745 }] },
-    { id: 'ORD-9086', customer: 'Pandurang Hegde', phone: '9123456789', address: 'Phaltan Rural Area', date: '2026-05-27', amount: 3500, payStatus: 'Paid', payType: 'Net Banking', status: 'Processing', trackingStep: 2, items: [{ name: 'Urea Fertilizer 50kg', qty: 10, price: 290 }, { name: 'NPK 19:19:19 Fertilizer', qty: 7, price: 85 }] },
-    { id: 'ORD-9087', customer: 'Sanjay Pawar', phone: '9234567890', address: 'Katphal Shivar, Baramati', date: '2026-05-26', amount: 9800, payStatus: 'Pending', payType: 'Credit Card', status: 'New', trackingStep: 1, items: [{ name: 'Drip Irrigation Kit 1 Acre', qty: 2, price: 4900 }] },
-    { id: 'ORD-9088', customer: 'Sunil Deshmukh', phone: '9345678901', address: 'APMC Market Area', date: '2026-05-25', amount: 5400, payStatus: 'Failed', payType: 'UPI', status: 'Cancelled', cancelReason: 'Payment failed at gateway', items: [{ name: 'Bayer Confidor Insecticide', qty: 6, price: 900 }] },
-    { id: 'ORD-9089', customer: 'Balasaheb Vikhe', phone: '9456789012', address: 'Loni Village, Ahmednagar', date: '2026-05-24', amount: 15400, payStatus: 'Paid', payType: 'UPI', status: 'Delivered', dateDelivered: '2026-05-24', items: [{ name: 'BT Cotton Seeds 450g', qty: 20, price: 740 }, { name: 'Urea Fertilizer 50kg', qty: 2, price: 300 }] },
-  ])
+  const [orders, setOrders] = useState([])
+
+  const loadOrders = async () => {
+    try {
+      const { default: api } = await import('../../services/api')
+      const res = await api.get('/orders')
+      console.log("Admin Orders API:", res.data)
+      const uiOrders = res.data.map(o => ({
+        _id: o._id,
+        id: o.orderId,
+        customer: o.customerName || 'Unknown Customer',
+        phone: 'N/A',
+        address: 'N/A',
+        date: o.createdAt ? o.createdAt.split('T')[0] : '',
+        amount: o.totalAmount,
+        payStatus: o.paymentStatus || 'Pending',
+        payType: o.paymentMethod === 'cod' ? 'Cash' : o.paymentMethod === 'credit' ? 'Udhari' : 'Online',
+        status: o.orderStatus,
+        dateDelivered: o.orderStatus === 'Delivered' ? o.updatedAt.split('T')[0] : null,
+        items: o.items.map(i => ({ name: i.name, qty: i.quantity, price: i.price })),
+        trackingStep: ['Pending', 'Confirmed', 'Processing', 'Packed', 'Ready For Dispatch', 'Assigned', 'Out For Delivery', 'Delivered', 'Completed'].indexOf(o.orderStatus)
+      }))
+      setOrders(uiOrders)
+      console.log("Admin Visible Orders:", uiOrders)
+    } catch (err) {
+      console.error('Failed to load orders', err)
+    }
+  }
+
+  useEffect(() => {
+    loadOrders()
+    const interval = setInterval(() => {
+      loadOrders()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   const [orderReturns, setOrderReturns] = useState([
     { id: 'RET-201', ordId: 'ORD-9081', customer: 'Suresh Patil', product: 'BT Cotton Seeds 450g (1 packet)', reason: 'Damaged packing / torn seed bag', status: 'Pending', date: '2026-05-30', refundAmount: 740 },
@@ -2649,11 +2722,11 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-gray-700 font-bold">Email Address *</label>
-                    <input type="email" className="input-field mt-1" required placeholder="E.g., prakash@agroerp.com" />
+                    <input type="email" className="input-field mt-1" required {...register('email')} placeholder="E.g., prakash@agroerp.com" />
                   </div>
                   <div>
                     <label className="block text-gray-700 font-bold">Mobile Number *</label>
-                    <input className="input-field mt-1" required placeholder="E.g., 9988776655" />
+                    <input className="input-field mt-1" required {...register('phone')} placeholder="E.g., 9988776655" />
                   </div>
                   <div>
                     <label className="block text-gray-700 font-bold">Gender</label>
@@ -2665,7 +2738,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="block text-gray-700 font-bold">Joining Date</label>
-                    <input type="date" className="input-field mt-1" defaultValue={new Date().toISOString().split('T')[0]} />
+                    <input type="date" className="input-field mt-1" {...register('joiningDate')} defaultValue={new Date().toISOString().split('T')[0]} />
                   </div>
                   <div>
                     <label className="block text-gray-700 font-bold">Role Title *</label>
@@ -2689,7 +2762,11 @@ export default function AdminDashboard() {
                     <label className="block text-gray-700 font-bold">Monthly Base Salary (₹) *</label>
                     <input type="number" className="input-field mt-1" required {...register('salary')} placeholder="E.g., 20000" />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
+                    <label className="block text-gray-700 font-bold">Login Password *</label>
+                    <input type="password" required {...register('password')} className="input-field mt-1" placeholder="Enter temporary password" />
+                  </div>
+                  <div className="md:col-span-1">
                     <label className="block text-gray-700 font-bold">Home Address</label>
                     <input className="input-field mt-1" placeholder="E.g., Baramati East Lane 4" />
                   </div>
@@ -2728,19 +2805,38 @@ export default function AdminDashboard() {
                     )
                   },
                   { key: 'role', label: 'Assigned Role' },
-                  { key: 'attendance', label: 'Attendance', render: (val) => <span className="font-semibold text-xs">{val}/26 Days</span> },
-                  { key: 'salary', label: 'Base Salary', render: (val) => <span className="font-bold text-xs text-gray-900">₹{val.toLocaleString('en-IN')}</span> },
+                  { key: 'attendance', label: 'Attendance', render: (val) => <span className="font-semibold text-xs">{val !== undefined ? `${val}/26 Days` : 'N/A'}</span> },
+                  { key: 'salary', label: 'Base Salary', render: (val) => <span className="font-bold text-xs text-gray-900">{val !== undefined ? `₹${val.toLocaleString('en-IN')}` : 'N/A'}</span> },
                   {
                     key: '_id',
                     label: 'Actions',
                     render: (_, row) => (
                       <div className="flex gap-1">
-                        <button onClick={() => setSelectedEmpProfile(row)} className="p-1 px-2 rounded bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold border">
+                        <button onClick={() => { setSelectedEmpProfile(row); setIsEditingEmployee(false); }} className="p-1 px-2 rounded bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold border">
                           View Profile
                         </button>
-                        <button onClick={() => {
-                          setEmployees(employees.filter(e => e._id !== row._id))
-                          toast.error('Employee account suspended!')
+                        <button onClick={async () => {
+                          try {
+                            const newStatus = row.status === 'active' ? 'suspended' : 'active'
+                            const { default: api } = await import('../../services/api')
+                            await api.put(`/employees/${row._id}`, { status: newStatus })
+                            setEmployees(employees.map(e => e._id === row._id ? { ...e, status: newStatus } : e))
+                            toast.success(`Employee ${newStatus === 'active' ? 'activated' : 'suspended'}`)
+                          } catch (err) {
+                            toast.error('Failed to update status')
+                          }
+                        }} className="p-1 px-2 rounded bg-slate-50 hover:bg-slate-100 text-slate-700 text-[10px] font-bold border">
+                          {row.status === 'active' ? 'Suspend' : 'Activate'}
+                        </button>
+                        <button onClick={async () => {
+                          try {
+                            const { default: api } = await import('../../services/api')
+                            await api.delete(`/employees/${row._id}`)
+                            setEmployees(employees.filter(e => e._id !== row._id))
+                            toast.error('Employee account deleted!')
+                          } catch (err) {
+                            toast.error('Failed to delete employee')
+                          }
                         }} className="p-1 text-red-500 hover:text-red-750">
                           <Trash2 size={13} />
                         </button>
@@ -2753,22 +2849,76 @@ export default function AdminDashboard() {
               />
 
               {/* View Profile Detail Modal */}
-              <Modal open={!!selectedEmpProfile} onClose={() => setSelectedEmpProfile(null)} title="Staff Details" size="sm">
-                <div className="space-y-4 text-center">
-                  <div className="w-16 h-16 rounded-full bg-emerald-700 text-white flex items-center justify-center font-black text-xl mx-auto shadow">
-                    {selectedEmpProfile?.name?.charAt(0)}
+              <Modal open={!!selectedEmpProfile} onClose={() => { setSelectedEmpProfile(null); setIsEditingEmployee(false); }} title={isEditingEmployee ? "Edit Staff Details" : "Staff Details"} size="sm">
+                {!isEditingEmployee ? (
+                  <div className="space-y-4 text-center">
+                    <div className="w-16 h-16 rounded-full bg-emerald-700 text-white flex items-center justify-center font-black text-xl mx-auto shadow">
+                      {selectedEmpProfile?.name?.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-base font-bold text-gray-800">{selectedEmpProfile?.name}</h4>
+                      <p className="text-xs text-gray-400 font-bold">{selectedEmpProfile?.role}</p>
+                    </div>
+                    <div className="text-left text-xs bg-slate-50 p-3 rounded-lg border space-y-2">
+                      <div className="flex justify-between"><span className="text-gray-400 font-bold">Email:</span> <span className="font-semibold text-gray-700">{selectedEmpProfile?.email}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-400 font-bold">Phone:</span> <span className="font-semibold text-gray-700">{selectedEmpProfile?.phone}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-400 font-bold">Salary:</span> <span className="font-bold text-gray-900">{selectedEmpProfile?.salary !== undefined ? `₹${selectedEmpProfile?.salary?.toLocaleString('en-IN')}` : 'N/A'}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-400 font-bold">Status:</span> <span className={`font-bold uppercase text-[9px] px-1.5 py-0.5 rounded ${selectedEmpProfile?.status === 'active' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>{selectedEmpProfile?.status}</span></div>
+                      <div className="flex justify-between"><span className="text-gray-400 font-bold">Joined:</span> <span className="font-semibold text-gray-600">{selectedEmpProfile?.joinDate}</span></div>
+                    </div>
+                    <div className="pt-2">
+                      <button onClick={() => setIsEditingEmployee(true)} className="btn-primary text-xs py-1.5 px-4 w-full">Edit Profile</button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-base font-bold text-gray-800">{selectedEmpProfile?.name}</h4>
-                    <p className="text-xs text-gray-400 font-bold">{selectedEmpProfile?.role}</p>
-                  </div>
-                  <div className="text-left text-xs bg-slate-50 p-3 rounded-lg border space-y-2">
-                    <div className="flex justify-between"><span className="text-gray-400 font-bold">Phone:</span> <span className="font-semibold text-gray-700">{selectedEmpProfile?.phone}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400 font-bold">Salary:</span> <span className="font-bold text-gray-900">₹{selectedEmpProfile?.salary?.toLocaleString('en-IN')}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400 font-bold">Status:</span> <span className="text-green-600 font-bold uppercase text-[9px] bg-green-50 px-1.5 py-0.5 rounded">Active</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400 font-bold">Joined:</span> <span className="font-semibold text-gray-600">{selectedEmpProfile?.joinDate}</span></div>
-                  </div>
-                </div>
+                ) : (
+                  <form onSubmit={async (e) => {
+                    e.preventDefault()
+                    try {
+                      const { default: api } = await import('../../services/api')
+                      const formData = new FormData(e.target)
+                      const updatePayload = {
+                        name: formData.get('name'),
+                        phone: formData.get('phone'),
+                        role: formData.get('role')
+                      }
+                      await api.put(`/employees/${selectedEmpProfile._id}`, updatePayload)
+                      setEmployees(employees.map(emp => emp._id === selectedEmpProfile._id ? { ...emp, ...updatePayload } : emp))
+                      toast.success('Employee updated successfully!')
+                      setSelectedEmpProfile(null)
+                      setIsEditingEmployee(false)
+                    } catch (err) {
+                      toast.error('Failed to update employee')
+                    }
+                  }} className="space-y-3 text-left text-xs">
+                    <div>
+                      <label className="block text-gray-700 font-bold">Full Name</label>
+                      <input name="name" defaultValue={selectedEmpProfile?.name} className="input-field mt-1" required />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-bold">Mobile Number</label>
+                      <input name="phone" defaultValue={selectedEmpProfile?.phone} className="input-field mt-1" required />
+                    </div>
+                    <div>
+                      <label className="block text-gray-700 font-bold">Role</label>
+                      <select name="role" defaultValue={selectedEmpProfile?.role} className="input-field mt-1" required>
+                        <option>Sales Executive</option>
+                        <option>Inventory Manager</option>
+                        <option>Warehouse Staff</option>
+                        <option>Delivery Coordinator</option>
+                        <option>Delivery Executive</option>
+                        <option>Customer Support Executive</option>
+                        <option>Agriculture Expert</option>
+                        <option>Finance Executive</option>
+                        <option>HR Manager</option>
+                        <option>Marketing Executive</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <button type="submit" className="btn-primary text-xs py-2 px-4 flex-1">Save Changes</button>
+                      <button type="button" onClick={() => setIsEditingEmployee(false)} className="btn-secondary text-xs py-2 px-4 flex-1">Cancel</button>
+                    </div>
+                  </form>
+                )}
               </Modal>
             </div>
           )}
@@ -3370,8 +3520,12 @@ export default function AdminDashboard() {
                                     </button>
                                     <button
                                       onClick={() => {
-                                        setProducts(products.filter(item => item.id !== p.id))
-                                        toast.error(`Removed "${p.name}" from catalog`)
+                                        import('../../services/api').then(({ default: api }) => {
+                                          api.delete(`/products/${p._id}`).then(() => {
+                                            toast.error(`Removed "${p.name}" from catalog`)
+                                            loadProducts()
+                                          })
+                                        })
                                       }}
                                       className="p-1.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold"
                                       title="Delete Product"
@@ -3466,22 +3620,37 @@ export default function AdminDashboard() {
                   const status = form.pstatus.value
                   const image = form.pimage.value || 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=150&auto=format&fit=crop&q=60'
 
-                  if (editingProduct) {
-                    const updated = products.map(p => p.id === editingProduct.id ? {
-                      ...p, name, category, brand, price, purchasePrice, stock, sku, description, unitType, gst, reorderLevel, expiryDate, status, image
-                    } : p)
-                    setProducts(updated)
-                    toast.success('Product updated successfully!')
-                    setEditingProduct(null)
-                  } else {
-                    const newProd = {
-                      id: `PRD-${String(products.length + 1).padStart(3, '0')}`,
-                      name, category, brand, price, purchasePrice, stock, sku, description, unitType, gst, reorderLevel, expiryDate, status, image, isFeatured: false
-                    }
-                    setProducts([...products, newProd])
-                    toast.success('Product registered successfully!')
+                  const apiPayload = {
+                    productId: sku || `PRD-${Date.now()}`,
+                    productName: name,
+                    category,
+                    brand,
+                    description,
+                    purchasePrice,
+                    sellingPrice: price,
+                    stockQuantity: stock,
+                    image,
+                    status
                   }
-                  setActiveItem('Products', 'Product Management')
+
+                  import('../../services/api').then(({ default: api }) => {
+                    if (editingProduct && editingProduct._id) {
+                      api.put(`/products/${editingProduct._id}`, apiPayload)
+                        .then(() => {
+                          toast.success('Product updated successfully!')
+                          setEditingProduct(null)
+                          loadProducts()
+                          setActiveItem('Products', 'Product Management')
+                        }).catch(err => toast.error('Failed to update product'))
+                    } else {
+                      api.post('/products', apiPayload)
+                        .then(() => {
+                          toast.success('Product registered successfully!')
+                          loadProducts()
+                          setActiveItem('Products', 'Product Management')
+                        }).catch(err => toast.error('Failed to add product'))
+                    }
+                  })
                 }}
                 className="space-y-4 text-xs font-medium text-gray-700"
               >

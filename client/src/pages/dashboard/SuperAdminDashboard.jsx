@@ -1,6 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSuperAdminStore } from '../../store/superAdminStore'
 import { motion, AnimatePresence } from 'framer-motion'
+import toast from 'react-hot-toast'
+import api from '../../services/api'
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts'
@@ -16,6 +18,35 @@ const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function SuperAdminDashboard() {
   const { activeCategory, activeSubItem, theme } = useSuperAdminStore()
+
+  // Admins state
+  const [admins, setAdmins] = useState([])
+  const [editingAdmin, setEditingAdmin] = useState(null)
+
+  // Create Admin Inputs
+  const [adminNameInput, setAdminNameInput] = useState('')
+  const [adminEmailInput, setAdminEmailInput] = useState('')
+  const [adminPhoneInput, setAdminPhoneInput] = useState('')
+  const [adminRoleInput, setAdminRoleInput] = useState('Super Admin')
+  const [adminPasswordInput, setAdminPasswordInput] = useState('')
+  const [adminConfirmPasswordInput, setAdminConfirmPasswordInput] = useState('')
+  const [adminCompanyIdInput, setAdminCompanyIdInput] = useState('')
+  const [adminCompanyNameInput, setAdminCompanyNameInput] = useState('')
+
+  // Load admins
+  const loadAdmins = async () => {
+    try {
+      const res = await api.get('/admins')
+      setAdmins(res.data)
+    } catch (err) {
+      console.error('Failed to load admins', err)
+      toast.error('Failed to load admins')
+    }
+  }
+
+  useEffect(() => {
+    loadAdmins()
+  }, [])
 
   // State elements for interactive demo features
   const [maintenanceMode, setMaintenanceMode] = useState(false)
@@ -1259,14 +1290,22 @@ export default function SuperAdminDashboard() {
                 
                 {/* Form Card */}
                 <div className={`lg:col-span-2 p-5 rounded-xl border ${theme === 'dark' ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} shadow-sm space-y-4`}>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">New Administrator Registration</h4>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {editingAdmin ? 'Edit Administrator Details' : 'New Administrator Registration'}
+                  </h4>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-2xs">
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">FULL NAME</label>
                       <div className="relative">
                         <User className="absolute left-3 top-3 text-slate-400" size={14} />
-                        <input type="text" placeholder="John Doe" className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`} />
+                        <input
+                          type="text"
+                          placeholder="John Doe"
+                          value={adminNameInput}
+                          onChange={(e) => setAdminNameInput(e.target.value)}
+                          className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                        />
                       </div>
                     </div>
 
@@ -1274,7 +1313,14 @@ export default function SuperAdminDashboard() {
                       <label className="block text-slate-400 font-bold mb-1">EMAIL ADDRESS</label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-3 text-slate-400" size={14} />
-                        <input type="email" placeholder="john@agroerp.com" className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`} />
+                        <input
+                          type="email"
+                          placeholder="john@agroerp.com"
+                          disabled={!!editingAdmin}
+                          value={adminEmailInput}
+                          onChange={(e) => setAdminEmailInput(e.target.value)}
+                          className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500 disabled:opacity-50`}
+                        />
                       </div>
                     </div>
 
@@ -1282,13 +1328,23 @@ export default function SuperAdminDashboard() {
                       <label className="block text-slate-400 font-bold mb-1">PHONE NUMBER</label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-3 text-slate-400" size={14} />
-                        <input type="text" placeholder="+91 98765 43210" className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`} />
+                        <input
+                          type="text"
+                          placeholder="+91 98765 43210"
+                          value={adminPhoneInput}
+                          onChange={(e) => setAdminPhoneInput(e.target.value)}
+                          className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                        />
                       </div>
                     </div>
 
                     <div>
                       <label className="block text-slate-400 font-bold mb-1">ASSIGN ENTERPRISE ROLE</label>
-                      <select className={`w-full p-2.5 rounded-lg border outline-none ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-350' : 'bg-slate-50 border-slate-200 text-slate-650'}`}>
+                      <select
+                        value={adminRoleInput}
+                        onChange={(e) => setAdminRoleInput(e.target.value)}
+                        className={`w-full p-2.5 rounded-lg border outline-none ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-350' : 'bg-slate-50 border-slate-200 text-slate-650'}`}
+                      >
                         <option>Super Admin</option>
                         <option>Regional Admin</option>
                         <option>Inventory Admin</option>
@@ -1298,40 +1354,131 @@ export default function SuperAdminDashboard() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-bold mb-1">ASSIGN SYSTEM REGION</label>
-                      <select className={`w-full p-2.5 rounded-lg border outline-none ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-350' : 'bg-slate-50 border-slate-200 text-slate-650'}`}>
-                        <option>Maharashtra (HQ)</option>
-                        <option>Gujarat Region</option>
-                        <option>Karnataka Hub</option>
-                        <option>Punjab Center</option>
-                      </select>
+                      <label className="block text-slate-400 font-bold mb-1">COMPANY ID</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. comp-a"
+                        value={adminCompanyIdInput}
+                        onChange={(e) => setAdminCompanyIdInput(e.target.value)}
+                        className={`w-full p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-slate-400 font-bold mb-1">DEPARTMENT SELECTION</label>
-                      <select className={`w-full p-2.5 rounded-lg border outline-none ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-350' : 'bg-slate-50 border-slate-200 text-slate-650'}`}>
-                        <option>Operations & Supply</option>
-                        <option>Core Technology</option>
-                        <option>Accounting & Finance</option>
-                        <option>Customer Support</option>
-                      </select>
+                      <label className="block text-slate-400 font-bold mb-1">COMPANY NAME</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Company A"
+                        value={adminCompanyNameInput}
+                        onChange={(e) => setAdminCompanyNameInput(e.target.value)}
+                        className={`w-full p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                      />
                     </div>
 
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">ACCOUNT PASSWORD</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 text-slate-400" size={14} />
-                        <input type="password" placeholder="••••••••" className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`} />
-                      </div>
-                    </div>
+                    {!editingAdmin && (
+                      <>
+                        <div>
+                          <label className="block text-slate-400 font-bold mb-1">ACCOUNT PASSWORD</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 text-slate-400" size={14} />
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              value={adminPasswordInput}
+                              onChange={(e) => setAdminPasswordInput(e.target.value)}
+                              className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                            />
+                          </div>
+                        </div>
 
-                    <div>
-                      <label className="block text-slate-400 font-bold mb-1">CONFIRM PASSWORD</label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 text-slate-400" size={14} />
-                        <input type="password" placeholder="••••••••" className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`} />
-                      </div>
-                    </div>
+                        <div>
+                          <label className="block text-slate-400 font-bold mb-1">CONFIRM PASSWORD</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-3 text-slate-400" size={14} />
+                            <input
+                              type="password"
+                              placeholder="••••••••"
+                              value={adminConfirmPasswordInput}
+                              onChange={(e) => setAdminConfirmPasswordInput(e.target.value)}
+                              className={`w-full pl-9 p-2.5 rounded-lg border ${theme === 'dark' ? 'bg-slate-950 border-slate-800 text-slate-200' : 'bg-slate-50 border-slate-200 text-slate-800'} outline-none focus:border-emerald-500`}
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={async () => {
+                        if (!adminNameInput || !adminEmailInput || !adminRoleInput) {
+                          toast.error('Name, Email and Role are required')
+                          return
+                        }
+                        if (!editingAdmin && (!adminPasswordInput || adminPasswordInput !== adminConfirmPasswordInput)) {
+                          toast.error('Passwords do not match or are empty')
+                          return
+                        }
+
+                        try {
+                          if (editingAdmin) {
+                            await api.put(`/admins/${editingAdmin._id}`, {
+                              name: adminNameInput,
+                              phone: adminPhoneInput,
+                              role: adminRoleInput,
+                              companyId: adminCompanyIdInput,
+                              companyName: adminCompanyNameInput
+                            })
+                            toast.success('Admin updated successfully')
+                          } else {
+                            await api.post('/admins', {
+                              name: adminNameInput,
+                              email: adminEmailInput,
+                              phone: adminPhoneInput,
+                              role: adminRoleInput,
+                              password: adminPasswordInput,
+                              companyId: adminCompanyIdInput,
+                              companyName: adminCompanyNameInput
+                            })
+                            toast.success('Admin created successfully')
+                          }
+
+                          // Reset inputs
+                          setAdminNameInput('')
+                          setAdminEmailInput('')
+                          setAdminPhoneInput('')
+                          setAdminPasswordInput('')
+                          setAdminConfirmPasswordInput('')
+                          setAdminCompanyIdInput('')
+                          setAdminCompanyNameInput('')
+                          setEditingAdmin(null)
+                          loadAdmins()
+                          useSuperAdminStore.getState().setActiveItem('Admin Management', 'Manage Admins')
+                        } catch (err) {
+                          toast.error(err.response?.data?.message || 'Action failed')
+                        }
+                      }}
+                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs rounded-lg transition-all"
+                    >
+                      {editingAdmin ? 'Save Changes' : 'Register Admin'}
+                    </button>
+                    {editingAdmin && (
+                      <button
+                        onClick={() => {
+                          setEditingAdmin(null)
+                          setAdminNameInput('')
+                          setAdminEmailInput('')
+                          setAdminPhoneInput('')
+                          setAdminPasswordInput('')
+                          setAdminConfirmPasswordInput('')
+                          setAdminCompanyIdInput('')
+                          setAdminCompanyNameInput('')
+                        }}
+                        className="ml-2 px-4 py-2 bg-slate-500 hover:bg-slate-400 text-white font-bold text-2xs rounded-lg transition-all"
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1407,22 +1554,17 @@ export default function SuperAdminDashboard() {
                       <tr className="border-b dark:border-slate-800 border-slate-100 text-slate-400 uppercase font-bold text-3xs">
                         <th className="py-2.5 px-4">Admin Name</th>
                         <th className="py-2.5 px-4">Role</th>
-                        <th className="py-2.5 px-4">Assigned Region</th>
-                        <th className="py-2.5 px-4">Last Login</th>
+                        <th className="py-2.5 px-4">Phone</th>
                         <th className="py-2.5 px-4">Status</th>
                         <th className="py-2.5 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {[
-                        { name: 'Sanjay Deshmukh', email: 'sanjay@agroerp.com', role: 'Regional Admin', region: 'Maharashtra', login: '10 mins ago', status: 'Active', initials: 'SD' },
-                        { name: 'Karan Singh', email: 'karan@agroerp.com', role: 'Finance Admin', region: 'Punjab Center', login: '2 hours ago', status: 'Active', initials: 'KS' },
-                        { name: 'Priya Patel', email: 'priya@agroerp.com', role: 'Support Admin', region: 'Gujarat Region', login: 'Yesterday', status: 'Suspended', initials: 'PP' }
-                      ].filter(adm => adm.name.toLowerCase().includes(searchFilter.toLowerCase())).map((adm, idx) => (
-                        <tr key={idx} className="border-b dark:border-slate-700/50 border-slate-50 font-medium">
+                      {admins.filter(adm => adm.name.toLowerCase().includes(searchFilter.toLowerCase())).map((adm, idx) => (
+                        <tr key={adm._id || idx} className="border-b dark:border-slate-700/50 border-slate-50 font-medium">
                           <td className="py-3 px-4 flex items-center gap-3">
                             <div className="w-7 h-7 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-3xs">
-                              {adm.initials}
+                              {adm.name ? adm.name.substring(0, 2).toUpperCase() : 'AD'}
                             </div>
                             <div>
                               <span className="font-extrabold text-slate-800 dark:text-slate-200">{adm.name}</span>
@@ -1430,16 +1572,56 @@ export default function SuperAdminDashboard() {
                             </div>
                           </td>
                           <td className="py-3 px-4 text-slate-400">{adm.role}</td>
-                          <td className="py-3 px-4">{adm.region}</td>
-                          <td className="py-3 px-4 font-medium text-slate-400">{adm.login}</td>
+                          <td className="py-3 px-4 text-slate-400">{adm.phone || 'N/A'}</td>
                           <td className="py-3 px-4">
-                            <span className={`text-4xs px-2 py-0.5 rounded-full font-bold ${adm.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                              {adm.status}
-                            </span>
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const endpoint = adm.status === 'active' ? 'deactivate' : 'activate'
+                                  await api.put(`/admins/${adm._id}/${endpoint}`)
+                                  toast.success(`Admin ${adm.status === 'active' ? 'deactivated' : 'activated'} successfully`)
+                                  loadAdmins()
+                                } catch (err) {
+                                  toast.error('Failed to change admin status')
+                                }
+                              }}
+                              className={`text-4xs px-2 py-0.5 rounded-full font-bold cursor-pointer transition-colors ${adm.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'}`}
+                            >
+                              {adm.status === 'active' ? 'Active' : 'Inactive'}
+                            </button>
                           </td>
                           <td className="py-3 px-4 text-right space-x-2">
-                            <button className="text-emerald-500 hover:underline inline-flex items-center gap-0.5"><Edit size={10} /> Edit</button>
-                            <button className="text-rose-500 hover:underline inline-flex items-center gap-0.5"><Trash2 size={10} /> Delete</button>
+                            <button
+                              onClick={() => {
+                                setEditingAdmin(adm)
+                                setAdminNameInput(adm.name)
+                                setAdminEmailInput(adm.email)
+                                setAdminPhoneInput(adm.phone || '')
+                                setAdminRoleInput(adm.role)
+                                setAdminCompanyIdInput(adm.companyId || '')
+                                setAdminCompanyNameInput(adm.companyName || '')
+                                useSuperAdminStore.getState().setActiveItem('Admin Management', 'Create Admin')
+                              }}
+                              className="text-emerald-500 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <Edit size={10} /> Edit
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (window.confirm('Are you sure you want to delete this admin?')) {
+                                  try {
+                                    await api.delete(`/admins/${adm._id}`)
+                                    toast.success('Admin deleted successfully')
+                                    loadAdmins()
+                                  } catch (err) {
+                                    toast.error('Failed to delete admin')
+                                  }
+                                }
+                              }}
+                              className="text-rose-500 hover:underline inline-flex items-center gap-0.5 cursor-pointer"
+                            >
+                              <Trash2 size={10} /> Delete
+                            </button>
                           </td>
                         </tr>
                       ))}

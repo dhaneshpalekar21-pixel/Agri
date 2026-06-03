@@ -15,6 +15,9 @@ const productRoutes = require('./routes/productRoutes')
 const billingRoutes = require('./routes/billingRoutes')
 const customerRoutes = require('./routes/customerRoutes')
 const analyticsRoutes = require('./routes/analyticsRoutes')
+const orderRoutes = require('./routes/orderRoutes')
+const employeeRoutes = require('./routes/employeeRoutes')
+const adminRoutes = require('./routes/adminRoutes')
 
 const app = express()
 
@@ -88,6 +91,9 @@ app.use('/api/products', productRoutes)
 app.use('/api/bills', billingRoutes)
 app.use('/api/customers', customerRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/orders', orderRoutes)
+app.use('/api/employees', employeeRoutes)
+app.use('/api/admins', adminRoutes)
 
 // 404 handler
 app.use((req, res) => {

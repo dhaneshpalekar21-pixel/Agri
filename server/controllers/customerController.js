@@ -10,6 +10,9 @@ const getCustomers = async (req, res, next) => {
       { phone: { $regex: search, $options: 'i' } },
       { village: { $regex: search, $options: 'i' } },
     ]
+    if (req.user && req.user.role === 'admin' && req.user.companyId) {
+      query.companyId = req.user.companyId
+    }
     const customers = await Customer.find(query).sort({ createdAt: -1 })
     res.json(customers)
   } catch (err) { next(err) }
@@ -33,7 +36,11 @@ const getCustomerPurchases = async (req, res, next) => {
 
 const createCustomer = async (req, res, next) => {
   try {
-    const customer = await Customer.create({ ...req.body, shopId: req.user.shopId })
+    const customerData = { ...req.body, shopId: req.user.shopId }
+    if (req.user && req.user.companyId) {
+      customerData.companyId = req.user.companyId
+    }
+    const customer = await Customer.create(customerData)
     res.status(201).json(customer)
   } catch (err) { next(err) }
 }

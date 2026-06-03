@@ -4,9 +4,12 @@ const Product = require('../models/Product')
 const getProducts = async (req, res, next) => {
   try {
     const { category, search, page = 1, limit = 50 } = req.query
-    const query = { shopId: req.user.shopId, isActive: true }
-    if (category) query.category = category
-    if (search) query.name = { $regex: search, $options: 'i' }
+    const query = { status: 'Active' }
+    if (category && category !== 'All') query.category = category
+    if (search) query.productName = { $regex: search, $options: 'i' }
+    if (req.user && req.user.role === 'admin' && req.user.companyId) {
+      query.companyId = req.user.companyId
+    }
 
     const products = await Product.find(query)
       .sort({ createdAt: -1 })
@@ -21,7 +24,7 @@ const getProducts = async (req, res, next) => {
 // GET /api/products/:id
 const getProduct = async (req, res, next) => {
   try {
-    const product = await Product.findOne({ _id: req.params.id, shopId: req.user.shopId })
+    const product = await Product.findById(req.params.id)
     if (!product) return res.status(404).json({ message: 'Product not found' })
     res.json(product)
   } catch (err) { next(err) }
@@ -30,7 +33,11 @@ const getProduct = async (req, res, next) => {
 // POST /api/products
 const createProduct = async (req, res, next) => {
   try {
-    const product = await Product.create({ ...req.body, shopId: req.user.shopId })
+    const productData = { ...req.body }
+    if (req.user && req.user.companyId) {
+      productData.companyId = req.user.companyId
+    }
+    const product = await Product.create(productData)
     res.status(201).json(product)
   } catch (err) { next(err) }
 }
@@ -38,8 +45,8 @@ const createProduct = async (req, res, next) => {
 // PUT /api/products/:id
 const updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, shopId: req.user.shopId },
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
       req.body,
       { new: true, runValidators: true }
     )
@@ -51,28 +58,10 @@ const updateProduct = async (req, res, next) => {
 // DELETE /api/products/:id
 const deleteProduct = async (req, res, next) => {
   try {
-    const product = await Product.findOneAndUpdate(
-      { _id: req.params.id, shopId: req.user.shopId },
-      { isActive: false },
-      { new: true }
-    )
+    const product = await Product.findByIdAndDelete(req.params.id)
     if (!product) return res.status(404).json({ message: 'Product not found' })
     res.json({ message: 'Product deleted' })
   } catch (err) { next(err) }
 }
 
-// GET /api/products/expiring?days=30
-const getExpiringProducts = async (req, res, next) => {
-  try {
-    const days = Number(req.query.days) || 30
-    const threshold = new Date(Date.now() + days * 24 * 60 * 60 * 1000)
-    const products = await Product.find({
-      shopId: req.user.shopId,
-      isActive: true,
-      expiryDate: { $lte: threshold, $gte: new Date() },
-    }).sort({ expiryDate: 1 })
-    res.json(products)
-  } catch (err) { next(err) }
-}
-
-module.exports = { getProducts, getProduct, createProduct, updateProduct, deleteProduct, getExpiringProducts }
+module.exports = { getProducts, getProduct, createProduct, updateProduct, deleteProduct }

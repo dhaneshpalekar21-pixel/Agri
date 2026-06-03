@@ -9,6 +9,7 @@ const customerSchema = new mongoose.Schema({
   landArea: { type: String, trim: true },
   address: { type: String },
   isActive: { type: Boolean, default: true },
+  companyId: { type: String }
 }, { timestamps: true })
 
 customerSchema.index({ phone: 1 })

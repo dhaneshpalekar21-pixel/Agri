@@ -5,12 +5,15 @@ const userSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   password: { type: String, required: true, minlength: 6 },
-  role: { type: String, enum: ['superadmin', 'admin', 'user'], default: 'admin' },
+  role: { type: String, default: 'admin' },
+  designation: { type: String, trim: true },
   shopId: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop' },
   phone: { type: String, trim: true },
   isActive: { type: Boolean, default: true },
   resetPasswordToken: String,
   resetPasswordExpire: Date,
+  companyId: { type: String },
+  companyName: { type: String }
 }, { timestamps: true })
 
 // Hash password before save

@@ -157,6 +157,22 @@ const roleColors = {
 
 export default function Sidebar({ open, onClose }) {
   const { user, logout } = useAuthStore()
+  if (user?.role === 'customer' ||
+      user?.role === 'farmer' ||
+      user?.email?.toLowerCase() === 'user@agroerp.com' ||
+      [
+        'Sales Executive',
+        'Inventory Manager',
+        'Warehouse Staff',
+        'Delivery Coordinator',
+        'Customer Support Executive',
+        'Finance Executive',
+        'HR Manager',
+        'Marketing Executive'
+      ].includes(user?.role)
+  ) {
+    return null
+  }
   const { activeCategory, activeSubItem, setActiveItem } = useAdminStore()
   const navigate = useNavigate()
   

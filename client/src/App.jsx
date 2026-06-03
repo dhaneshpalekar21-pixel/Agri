@@ -57,6 +57,8 @@ import PlanFeatures from './pages/subscription/PlanFeatures'
 import SubscriptionAnalytics from './pages/subscription/SubscriptionAnalytics'
 import Settings from './pages/settings/Settings'
 import Landing from './pages/Landing'
+import FarmerPortal from './pages/farmer/FarmerPortal'
+import EmployeePortal from './pages/employee/EmployeePortal'
 
 // Complaints & Support Pages
 import FarmerComplaints from './pages/complaints/FarmerComplaints'
@@ -133,6 +135,25 @@ function ProtectedRoute({ children, allowedRoles }) {
 function DashboardRouter() {
   const { user } = useAuthStore()
   if (user?.role === 'superadmin') return <SuperAdminDashboard />
+  if (user?.role === 'customer' || user?.role === 'farmer' || user?.email === 'user@agroerp.com') {
+    return <FarmerPortal />
+  }
+
+  const employeeRoles = [
+    'Sales Executive',
+    'Inventory Manager',
+    'Warehouse Staff',
+    'Delivery Coordinator',
+    'Delivery Executive',
+    'Customer Support Executive',
+    'Finance Executive',
+    'HR Manager',
+    'Marketing Executive'
+  ]
+  if (user?.role === 'employee' || employeeRoles.includes(user?.role)) {
+    return <EmployeePortal />
+  }
+
   if (user?.role === 'user') return <UserDashboard />
   return <AdminDashboard />
 }
